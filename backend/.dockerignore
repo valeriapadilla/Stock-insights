@@ -1,0 +1,6 @@
+# backend/.dockerignore
+.git
+.gitignore
+README.md
+.env
+*.md

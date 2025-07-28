@@ -20,13 +20,15 @@ type Config struct{
 
 	CacheTTL time.Duration
 
+	RateLimit int
+
 	AdminAPIKey string
 
 	MetricsPort string
 	EnableTracing bool
 }
 
-func LoadConfig() (*Config){
+func Load() (*Config){
 	if err := godotenv.Load(); err != nil{
 		logrus.Warn("Error loading .env file: %v", err)
 	}
