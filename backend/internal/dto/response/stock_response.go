@@ -1,8 +1,7 @@
 package response
 
 import (
-    "time"
-    "stock-insights/backend/internal/model"
+    "github.com/valeriapadilla/stock-insights/internal/model"
 )
 
 type StockListResponse struct {

@@ -1,2 +1,9 @@
 .env
 /backend/certs/*
+
+# Test coverage
+coverage.out
+coverage.html
+
+# Test binary
+*.test

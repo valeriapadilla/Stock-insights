@@ -579,125 +579,86 @@ log.WithFields(log.Fields{
 
 ---
 
-## 📅 **9. Implementation Timeline**
-
-### **Day 1: Setup & Infrastructure**
-- [ ] Setup CockroachDB Cloud
-- [ ] Setup Railway project
-- [ ] Setup Vercel project
-- [ ] Setup Cloudflare
-- [ ] Setup monitoring
-
-### **Day 2: Backend Foundation**
-- [ ] Go project structure
-- [ ] Database schema & migrations
-- [ ] Basic API endpoints
-- [ ] Health checks
-
-### **Day 3: Core Services**
-- [ ] Ingestion service
-- [ ] Recommendation service
-- [ ] Cache implementation
-- [ ] Rate limiting
-
-### **Day 4: API Completion**
-- [ ] All public endpoints
-- [ ] All admin endpoints
-- [ ] Authentication
-- [ ] Error handling
-
-### **Day 5: Frontend**
-- [ ] Vue3 project setup
-- [ ] Stock list component
-- [ ] Stock details component
-- [ ] Recommendations component
-
-### **Day 6: Integration & Polish**
-- [ ] Frontend-backend integration
-- [ ] Error handling
-- [ ] Loading states
-- [ ] Responsive design
-
-### **Day 7: Testing & Deployment**
-- [ ] Unit tests
-- [ ] Integration tests
-- [ ] Load tests
-- [ ] Production deployment
-
----
-
-## ✅ **10. Acceptance Criteria**
-
-### **10.1 Functional**
-- [ ] Daily automatic ingestion works
-- [ ] Public API responds in < 300ms
-- [ ] Frontend displays stocks correctly
-- [ ] Recommendations calculated daily
-- [ ] Health checks work
-
-### **10.2 Performance**
-- [ ] P95 response time < 300ms
-- [ ] Cache hit rate > 90%
-- [ ] Error rate < 1%
-- [ ] Uptime > 99.9%
-- [ ] RPS target: 1,000-5,000 (Free Tier)
-- [ ] Maximum RPS: 10,000 (with optimizations)
-
-### **10.3 Security**
-- [ ] Rate limiting active
-- [ ] CORS configured
-- [ ] Security headers present
-- [ ] Admin endpoints protected
-
-### **10.4 Monitoring**
-- [ ] UptimeRobot configured
-- [ ] Structured logs
-- [ ] Basic metrics
-- [ ] Alerts configured
-
----
-
-## 🚀 **11. Next Steps (Post-MVP)**
-
-### **11.1 Scalability**
-- [ ] Redis for distributed cache
-- [ ] Message queue (Kafka/RabbitMQ)
-- [ ] Horizontal scaling
-- [ ] Database sharding
-
-### **11.2 Features**
-- [ ] User authentication
-- [ ] Watchlists
-- [ ] Price alerts
-- [ ] Historical data
-- [ ] Advanced analytics
-
-### **11.3 Monetization**
-- [ ] API keys for developers
-- [ ] Premium features
-- [ ] Data exports
-- [ ] Custom recommendations
-
----
-
-## 📚 **12. Resources & References**
-
-### **12.1 Documentation**
-- [CockroachDB Docs](https://www.cockroachlabs.com/docs/)
-- [Railway Docs](https://docs.railway.app/)
-- [Vercel Docs](https://vercel.com/docs)
-- [Cloudflare Docs](https://developers.cloudflare.com/)
-
-### **12.2 Tools**
-- [k6 Load Testing](https://k6.io/)
-- [UptimeRobot](https://uptimerobot.com/)
-- [Grafana Cloud](https://grafana.com/products/cloud/)
-
-### **12.3 Best Practices**
-- [12 Factor App](https://12factor.net/)
-- [REST API Design](https://restfulapi.net/)
-- [Security Headers](https://owasp.org/www-project-secure-headers/)
-
----
-
-**Note**: This document is the updated version with corrected endpoints, optimized indexes, and refined architecture for the 1-week MVP. 
+🗄️ Fase 2: Database & Repository (2 horas)
+2.1 Configurar CockroachDB
+✅ Crear: internal/database/connection.go
+✅ Test: Conexión a CockroachDB
+✅ Test: Ping a la base de datos
+2.2 Migraciones
+✅ Crear: internal/database/migrations/
+✅ SQL: Tabla stocks (según specs)
+✅ SQL: Tabla recommendations (según specs)
+✅ Test: Migraciones se ejecutan correctamente
+2.3 Repository Pattern
+✅ Crear: internal/repository/stock_repository.go
+✅ Test: CRUD básico para stocks
+✅ Crear: internal/repository/recommendation_repository.go
+✅ Test: CRUD básico para recommendations
+🔌 Fase 3: External API & Data Worker (3 horas)
+3.1 External API Client
+✅ Crear: internal/client/external_api.go
+✅ Test: Conectar a api.karenai.click
+✅ Test: Manejar paginación
+✅ Test: Manejar errores de red
+3.2 Data Worker (Cada 24 horas)
+✅ Crear: cmd/worker/data/main.go
+✅ Crear: internal/worker/data_worker.go
+✅ Test: Ingestion completa de datos
+✅ Test: Manejo de duplicados (upsert)
+✅ Test: Logging de progreso
+✅ Test: Ejecución manual y automática
+3.3 Ingestion Endpoint (Manual trigger)
+✅ Crear: internal/handler/ingestion.go
+✅ Test: POST /api/admin/ingest (con JWT)
+✅ Test: Respuesta con status y progreso
+🌐 Fase 4: API Gateway & Middleware (1 hora)
+4.1 API Gateway Pattern
+✅ Crear: internal/gateway/api_gateway.go
+✅ Test: Request/response middleware
+✅ Test: CORS middleware
+✅ Test: Security headers middleware
+✅ Test: Logging middleware
+✅ Test: Metrics middleware
+4.2 Cache Implementation
+✅ Crear: internal/cache/memory_cache.go
+✅ Test: Cache hit/miss metrics
+✅ Test: Cache invalidation strategy
+✅ Test: Cache warming for hot data
+✅ Test: Cache middleware
+✅ Test: TTL configuration (stocks: 5min, details: 10min, recommendations: 1h)
+✅ Test: Cache hit rate monitoring
+🔌 Fase 5: API Server - Stock Endpoints (2 horas)
+5.1 Stock Service
+✅ Crear: internal/service/stock_service.go
+✅ Test: Obtener stocks con filtros
+✅ Test: Paginación
+✅ Test: Búsqueda por ticker/company
+5.2 Stock Handlers
+✅ Crear: internal/handler/stock.go
+✅ Test: GET /api/public/stocks
+✅ Test: GET /api/public/stocks/{ticker}
+✅ Test: Query parameters (sort, filter, page)
+5.3 Cache Integration
+✅ Integrar: Cache en stock service
+✅ Test: Cache de stocks
+✅ Test: TTL y invalidación
+🤖 Fase 6: Recommendation Worker & Algorithm (3 horas)
+6.1 Recommendation Worker (Cada 24 horas)
+✅ Crear: cmd/worker/recommendation/main.go
+✅ Crear: internal/worker/recommendation_worker.go
+✅ Test: Cálculo automático diario
+✅ Test: Algoritmo de scoring básico
+✅ Test: Ranking de stocks
+✅ Test: Generación de explicaciones
+6.2 Recommendation Service
+✅ Crear: internal/service/recommendation_service.go
+✅ Test: Algoritmo de scoring
+✅ Test: Ranking y explicaciones
+✅ Test: Cache de recommendations
+6.3 Recommendation Handlers
+✅ Crear: internal/handler/recommendation.go
+✅ Test: GET /api/public/recommendations
+✅ Test: Respuesta con top stocks
+6.4 Recommendation Endpoint (Manual trigger)
+✅ Test: POST /api/admin/recommendations (con JWT)
+✅ Test: Trigger manual de cálculo
