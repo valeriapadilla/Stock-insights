@@ -16,11 +16,11 @@ func LoadTestConfig() *TestConfig {
 		logrus.Warn("No .env.test file found, using environment variables")
 	}
 
-	TestConfig := &TestConfig{
+	testConfig := &TestConfig{
 		DatabaseURLTest: os.Getenv("DATABASE_URL_TEST"),
 	}
 
-	return TestConfig
+	return testConfig
 }
 
 func (tc *TestConfig) HasTestDatabase() bool {

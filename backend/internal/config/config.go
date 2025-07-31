@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -43,6 +44,26 @@ func Load() *Config {
 	}
 
 	return config
+}
+
+func (c *Config) Validate() error {
+	if c.Environment == "test" {
+		return nil
+	}
+
+	if c.DatabaseURL == "" {
+		return fmt.Errorf("DATABASE_URL is required")
+	}
+
+	if c.Environment != "development" && c.Environment != "production" && c.Environment != "test" {
+		return fmt.Errorf("ENVIRONMENT must be one of: development, production, test")
+	}
+
+	if c.RateLimit <= 0 {
+		return fmt.Errorf("RATE_LIMIT must be greater than 0")
+	}
+
+	return nil
 }
 
 func getEnv(key, defaultValue string) string {

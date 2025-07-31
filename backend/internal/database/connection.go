@@ -24,8 +24,8 @@ func Connect() error {
 		databaseURL = testCfg.GetTestDatabaseURL()
 	} else {
 		cfg := config.Load()
-		if cfg.DatabaseURL == "" {
-			return fmt.Errorf("DATABASE_URL is not set")
+		if err := cfg.Validate(); err != nil {
+			return fmt.Errorf("configuration validation failed: %w", err)
 		}
 		databaseURL = cfg.DatabaseURL
 	}

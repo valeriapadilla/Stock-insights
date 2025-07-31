@@ -15,7 +15,7 @@ type Server struct {
 func NewServer(cfg *config.Config) *Server {
 	server := &Server{
 		config: cfg,
-		router: gin.Default(),
+		router: gin.New(),
 	}
 
 	server.setupMiddleware()
@@ -25,15 +25,19 @@ func NewServer(cfg *config.Config) *Server {
 }
 
 func (s *Server) setupMiddleware() {
-	s.router.Use(gin.Logger())
+	s.router.Use(middleware.RequestIDMiddleware())
+
+	s.router.Use(middleware.LoggingMiddleware())
+
 	s.router.Use(gin.Recovery())
+
 	s.router.Use(middleware.RateLimitMiddleware(s.config.RateLimit, 10))
 }
 
 func (s *Server) setupRoutes() {
 	s.router.GET("/health", handler.HealthCheck)
 	s.router.HEAD("/health", handler.HealthCheckHead)
-	
+
 	publicAPI := s.router.Group("/api/public")
 	{
 		publicAPI.GET("/health", handler.HealthCheck)
@@ -42,4 +46,4 @@ func (s *Server) setupRoutes() {
 
 func (s *Server) Run() error {
 	return s.router.Run(":" + s.config.Port)
-} 
+}

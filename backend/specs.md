@@ -611,22 +611,7 @@ log.WithFields(log.Fields{
 ✅ Crear: internal/handler/ingestion.go
 ✅ Test: POST /api/admin/ingest (con JWT)
 ✅ Test: Respuesta con status y progreso
-🌐 Fase 4: API Gateway & Middleware (1 hora)
-4.1 API Gateway Pattern
-✅ Crear: internal/gateway/api_gateway.go
-✅ Test: Request/response middleware
-✅ Test: CORS middleware
-✅ Test: Security headers middleware
-✅ Test: Logging middleware
-✅ Test: Metrics middleware
-4.2 Cache Implementation
-✅ Crear: internal/cache/memory_cache.go
-✅ Test: Cache hit/miss metrics
-✅ Test: Cache invalidation strategy
-✅ Test: Cache warming for hot data
-✅ Test: Cache middleware
-✅ Test: TTL configuration (stocks: 5min, details: 10min, recommendations: 1h)
-✅ Test: Cache hit rate monitoring
+
 🔌 Fase 5: API Server - Stock Endpoints (2 horas)
 5.1 Stock Service
 ✅ Crear: internal/service/stock_service.go
@@ -638,10 +623,7 @@ log.WithFields(log.Fields{
 ✅ Test: GET /api/public/stocks
 ✅ Test: GET /api/public/stocks/{ticker}
 ✅ Test: Query parameters (sort, filter, page)
-5.3 Cache Integration
-✅ Integrar: Cache en stock service
-✅ Test: Cache de stocks
-✅ Test: TTL y invalidación
+
 🤖 Fase 6: Recommendation Worker & Algorithm (3 horas)
 6.1 Recommendation Worker (Cada 24 horas)
 ✅ Crear: cmd/worker/recommendation/main.go

@@ -5,15 +5,23 @@ import (
 	"fmt"
 
 	"github.com/valeriapadilla/stock-insights/internal/model"
+	"github.com/valeriapadilla/stock-insights/internal/repository/interfaces"
+	"github.com/valeriapadilla/stock-insights/internal/validator"
 )
 
+// StockRepository implements interfaces.StockRepository
 type StockRepository struct {
 	*BaseRepository
+	validator *validator.CommonValidator
 }
+
+// Ensure StockRepository implements the interface
+var _ interfaces.StockRepository = (*StockRepository)(nil)
 
 func NewStockRepository(db *sql.DB) *StockRepository {
 	return &StockRepository{
 		BaseRepository: NewBaseRepository(db),
+		validator:      validator.NewCommonValidator(),
 	}
 }
 
@@ -27,9 +35,15 @@ func (r *StockRepository) GetAll(limit, offset int, filters map[string]string) (
 		Limit(limit).
 		Offset(offset)
 
-	qb.Where("brokerage = ?", filters["brokerage"])
-	qb.Where("rating_to = ?", filters["rating"])
-	qb.Where("action = ?", filters["action"])
+	if filters["brokerage"] != "" {
+		qb.Where("brokerage = ?", r.validator.SanitizeString(filters["brokerage"]))
+	}
+	if filters["rating"] != "" {
+		qb.Where("rating_to = ?", r.validator.SanitizeString(filters["rating"]))
+	}
+	if filters["action"] != "" {
+		qb.Where("action = ?", r.validator.SanitizeString(filters["action"]))
+	}
 
 	query, args := qb.Build()
 
@@ -53,19 +67,21 @@ func (r *StockRepository) GetAll(limit, offset int, filters map[string]string) (
 		stocks = append(stocks, &stock)
 	}
 
-	if stocks == nil {
-		stocks = make([]*model.Stock, 0)
-	}
-
 	return stocks, nil
 }
 
 func (r *StockRepository) Count(filters map[string]string) (int, error) {
 	qb := NewQueryBuilder().From("stocks")
 
-	qb.Where("brokerage = ?", filters["brokerage"])
-	qb.Where("rating_to = ?", filters["rating"])
-	qb.Where("action = ?", filters["action"])
+	if filters["brokerage"] != "" {
+		qb.Where("brokerage = ?", r.validator.SanitizeString(filters["brokerage"]))
+	}
+	if filters["rating"] != "" {
+		qb.Where("rating_to = ?", r.validator.SanitizeString(filters["rating"]))
+	}
+	if filters["action"] != "" {
+		qb.Where("action = ?", r.validator.SanitizeString(filters["action"]))
+	}
 
 	query, args := qb.CountQuery()
 

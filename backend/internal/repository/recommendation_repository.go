@@ -6,19 +6,31 @@ import (
 	"time"
 
 	"github.com/valeriapadilla/stock-insights/internal/model"
+	"github.com/valeriapadilla/stock-insights/internal/repository/interfaces"
+	"github.com/valeriapadilla/stock-insights/internal/validator"
 )
 
+// RecommendationRepositorySimple implements interfaces.RecommendationRepository
 type RecommendationRepositorySimple struct {
 	*BaseRepository
+	validator *validator.RecommendationValidator
 }
+
+// Ensure RecommendationRepositorySimple implements the interface
+var _ interfaces.RecommendationRepository = (*RecommendationRepositorySimple)(nil)
 
 func NewRecommendationRepositorySimple(db *sql.DB) *RecommendationRepositorySimple {
 	return &RecommendationRepositorySimple{
 		BaseRepository: NewBaseRepository(db),
+		validator:      validator.NewRecommendationValidator(),
 	}
 }
 
 func (r *RecommendationRepositorySimple) GetLatest(limit int) ([]*model.Recommendation, error) {
+	if limit <= 0 || limit > 1000 {
+		limit = 10
+	}
+
 	latestRunAt, err := r.GetLatestRunAt()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest run_at: %w", err)
@@ -78,6 +90,10 @@ func (r *RecommendationRepositorySimple) BulkCreate(recommendations []*model.Rec
 		defer stmt.Close()
 
 		for _, recommendation := range recommendations {
+			if err := r.validator.Validate(recommendation); err != nil {
+				return fmt.Errorf("invalid recommendation: %w", err)
+			}
+
 			_, err := stmt.Exec(
 				recommendation.ID, recommendation.Ticker, recommendation.Score,
 				recommendation.Explanation, recommendation.RunAt, recommendation.Rank,
@@ -108,20 +124,4 @@ func (r *RecommendationRepositorySimple) GetLatestRunAt() (*time.Time, error) {
 	}
 
 	return runAt, nil
-}
-
-func (r *RecommendationRepositorySimple) ShouldCalculateToday() (bool, error) {
-	latestRunAt, err := r.GetLatestRunAt()
-	if err != nil {
-		return true, nil
-	}
-
-	if latestRunAt == nil {
-		return true, nil
-	}
-
-	today := time.Now().Format("2006-01-02")
-	latestRunDate := latestRunAt.Format("2006-01-02")
-
-	return today != latestRunDate, nil
 }

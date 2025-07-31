@@ -91,7 +91,7 @@ func (mm *MigrationManager) executePendingMigrations(migrations []Migration, exe
 			}
 
 			if os.Getenv("LOG_LEVEL") != "error" {
-				log.Printf("✅ Migration completed: %s", migration.Filename)
+				log.Printf("Migration completed: %s", migration.Filename)
 			}
 		}
 	}
