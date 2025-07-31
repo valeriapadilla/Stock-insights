@@ -11,18 +11,42 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/model"
 )
 
-// Helper function to connect to test database
 func connectToTestDatabase() error {
 	os.Setenv("TESTING", "true")
 	defer os.Unsetenv("TESTING")
 
-	return database.Connect()
+	err := database.Connect()
+	if err != nil {
+		return err
+	}
+
+	// Clean existing data and migrations table
+	cleanDatabase()
+
+	manager := database.NewMigrationManager(database.DB)
+	return manager.RunMigrations()
 }
 
-// Helper function to create test stocks for recommendations
+func cleanDatabase() {
+	// Drop and recreate tables to ensure clean state
+	queries := []string{
+		"DROP TABLE IF EXISTS recommendations CASCADE",
+		"DROP TABLE IF EXISTS stocks CASCADE",
+		"DELETE FROM migrations",
+		"DROP TABLE IF EXISTS migrations CASCADE",
+	}
+
+	for _, query := range queries {
+		_, err := database.DB.Exec(query)
+		if err != nil {
+			// Log error but don't fail - this is cleanup
+			fmt.Printf("Warning: failed to clean database: %v\n", err)
+		}
+	}
+}
+
 func createTestStocksForRecommendations(t *testing.T, repo *StockRepository, recommendations []*model.Recommendation) error {
 	for _, rec := range recommendations {
-		// Create a test stock for each recommendation
 		testStock := &model.Stock{
 			Ticker:     rec.Ticker,
 			Company:    fmt.Sprintf("Test Company %s", rec.Ticker),
@@ -37,10 +61,8 @@ func createTestStocksForRecommendations(t *testing.T, repo *StockRepository, rec
 			UpdatedAt:  time.Now(),
 		}
 
-		// Clean up any existing stock first
 		cleanupStock(t, repo, testStock.Ticker)
 
-		// Create the stock
 		err := createTestStock(repo, testStock)
 		if err != nil {
 			return fmt.Errorf("failed to create test stock for %s: %w", rec.Ticker, err)
@@ -50,7 +72,6 @@ func createTestStocksForRecommendations(t *testing.T, repo *StockRepository, rec
 	return nil
 }
 
-// Helper function to create test stock
 func createTestStock(repo *StockRepository, stock *model.Stock) error {
 	query := `
 		INSERT INTO stocks (
@@ -68,40 +89,31 @@ func createTestStock(repo *StockRepository, stock *model.Stock) error {
 	return err
 }
 
-// Helper function to cleanup stock
 func cleanupStock(t *testing.T, repo *StockRepository, ticker string) {
-	// First delete recommendations that reference this stock
 	query := "DELETE FROM recommendations WHERE ticker = $1"
 	_, err := repo.GetDB().Exec(query, ticker)
 	require.NoError(t, err)
 
-	// Then delete the stock
 	query = "DELETE FROM stocks WHERE ticker = $1"
 	_, err = repo.GetDB().Exec(query, ticker)
 	require.NoError(t, err)
 }
 
-// Helper function to cleanup recommendations
 func cleanupRecommendations(t *testing.T, repo *RecommendationRepositorySimple, runAt time.Time) {
-	// Delete all recommendations to ensure clean state
-	query := "DELETE FROM recommendations"
-	_, err := repo.GetDB().Exec(query)
+	query := "DELETE FROM recommendations WHERE run_at::date = $1::date"
+	_, err := repo.GetDB().Exec(query, runAt)
 	require.NoError(t, err)
 }
 
-// Helper function to cleanup all test data
 func cleanupAllTestData(t *testing.T, repo *StockRepository) {
-	// Delete all recommendations first (due to foreign key constraint)
 	query := "DELETE FROM recommendations"
 	_, err := repo.GetDB().Exec(query)
 	require.NoError(t, err)
 
-	// Then delete all stocks
 	query = "DELETE FROM stocks"
 	_, err = repo.GetDB().Exec(query)
 	require.NoError(t, err)
 
-	// Verify cleanup was successful
 	count, err := repo.Count(map[string]string{})
 	require.NoError(t, err)
 	require.Equal(t, 0, count, "Database should be empty after cleanup")

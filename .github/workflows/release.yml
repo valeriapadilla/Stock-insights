@@ -1,0 +1,78 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Run Backend Tests
+        run: |
+          cd backend
+          make test
+
+      - name: Build Backend
+        run: |
+          cd backend
+          make build
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        run: |
+          echo "Deploying to Railway..."
+          
+          # Create deployment using GraphQL
+          curl -X POST \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"query":"mutation { deploymentCreate(input: { serviceId: \"'$RAILWAY_PROJECT_ID'\" }) { id } }"}' \
+            https://backboard.railway.com/graphql/v2
+
+  # deploy-frontend:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '18'
+
+  #     - name: Install dependencies
+  #       run: |
+  #         cd frontend
+  #         npm install
+
+  #     - name: Run Frontend Tests
+  #       run: |
+  #         cd frontend
+  #         npm test
+
+  #     - name: Build frontend
+  #       run: |
+  #         cd frontend
+  #         npm run build
+
+  #     - name: Deploy to Vercel
+  #       uses: amondnet/vercel-action@v25
+  #       with:
+  #         vercel-token: ${{ secrets.VERCEL_TOKEN }}
+  #         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+  #         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+  #         working-directory: ./frontend 

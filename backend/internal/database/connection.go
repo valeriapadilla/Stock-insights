@@ -16,7 +16,6 @@ var DB *sql.DB
 func Connect() error {
 	var databaseURL string
 
-	// Check if we're in test mode
 	if os.Getenv("TESTING") == "true" {
 		testCfg := config.LoadTestConfig()
 		if !testCfg.HasTestDatabase() {

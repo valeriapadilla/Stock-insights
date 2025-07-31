@@ -11,10 +11,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// AuthMiddleware verifica el token JWT en headers
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Obtener token del header Authorization
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -25,7 +23,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Verificar formato "Bearer <token>"
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -38,7 +35,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		tokenString := tokenParts[1]
 
-		// Obtener secreto JWT del environment
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -48,7 +44,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Decodificar secreto de base64
 		secretBytes, err := base64.StdEncoding.DecodeString(secret)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -58,9 +53,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Verificar y parsear token
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// Verificar algoritmo
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
@@ -76,7 +69,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Verificar que el token es válido
 		if !token.Valid {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid token",
@@ -85,9 +77,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Verificar claims
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			// Verificar rol admin
 			if role, exists := claims["role"]; !exists || role != "admin" {
 				c.JSON(http.StatusForbidden, gin.H{
 					"error": "Admin role required",
@@ -96,7 +86,6 @@ func AuthMiddleware() gin.HandlerFunc {
 				return
 			}
 
-			// Agregar claims al contexto para uso posterior
 			c.Set("user_role", claims["role"])
 			c.Set("user_subject", claims["sub"])
 		}

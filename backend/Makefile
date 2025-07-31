@@ -1,4 +1,4 @@
-.PHONY: test test-coverage test-short
+.PHONY: test test-coverage test-short build
 
 test:
 	go test ./... -v
@@ -9,3 +9,6 @@ test-coverage:
 
 test-short:
 	go test ./... -v -short
+
+build:
+	go build -o main cmd/api/main.go

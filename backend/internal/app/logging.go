@@ -6,16 +6,11 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/config"
 )
 
-// SetupLogging configura el sistema de logging
 func SetupLogging(cfg *config.Config) {
-	// Configurar nivel de log
 	setupLogLevel(cfg)
-	
-	// Configurar modo de producción
 	setupProductionMode(cfg)
 }
 
-// setupLogLevel configura el nivel de logging
 func setupLogLevel(cfg *config.Config) {
 	level, err := logrus.ParseLevel(cfg.LogLevel)
 	if err != nil {
@@ -26,7 +21,6 @@ func setupLogLevel(cfg *config.Config) {
 	}
 }
 
-// setupProductionMode configura el modo de producción
 func setupProductionMode(cfg *config.Config) {
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
@@ -34,4 +28,4 @@ func setupProductionMode(cfg *config.Config) {
 	} else {
 		logrus.Info("Running in development mode")
 	}
-} 
+}

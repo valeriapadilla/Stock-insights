@@ -40,6 +40,21 @@ func NewMigrationFileLoader(dir string) *MigrationFileLoader {
 	return &MigrationFileLoader{migrationsDir: dir}
 }
 
+func getMigrationsPath() string {
+	paths := []string{
+		"internal/database/migrations",
+		"migrations",
+		"../internal/database/migrations",
+		"../../internal/database/migrations",
+	}
+	for _, path := range paths {
+		if _, err := os.Stat(path); err == nil {
+			return path
+		}
+	}
+	return "internal/database/migrations"
+}
+
 func (mm *MigrationManager) RunMigrations() error {
 	if mm.db == nil {
 		return fmt.Errorf("database connection not established")
@@ -50,7 +65,7 @@ func (mm *MigrationManager) RunMigrations() error {
 		return fmt.Errorf("failed to create migrations table: %w", err)
 	}
 
-	loader := NewMigrationFileLoader("internal/database/migrations")
+	loader := NewMigrationFileLoader(getMigrationsPath())
 	migrations, err := loader.LoadMigrations()
 	if err != nil {
 		return fmt.Errorf("failed to load migrations: %w", err)

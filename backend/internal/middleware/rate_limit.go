@@ -8,7 +8,6 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// RateLimiter almacena los limitadores por IP
 type RateLimiter struct {
 	limiters map[string]*rate.Limiter
 	mu       sync.RWMutex
@@ -16,7 +15,6 @@ type RateLimiter struct {
 	burst    int
 }
 
-// NewRateLimiter crea un nuevo rate limiter
 func NewRateLimiter(rps int, burst int) *RateLimiter {
 	return &RateLimiter{
 		limiters: make(map[string]*rate.Limiter),
@@ -25,7 +23,6 @@ func NewRateLimiter(rps int, burst int) *RateLimiter {
 	}
 }
 
-// getLimiter obtiene o crea un limiter para una IP
 func (rl *RateLimiter) getLimiter(ip string) *rate.Limiter {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -39,7 +36,6 @@ func (rl *RateLimiter) getLimiter(ip string) *rate.Limiter {
 	return limiter
 }
 
-// RateLimitMiddleware crea el middleware de rate limiting
 func RateLimitMiddleware(rps int, burst int) gin.HandlerFunc {
 	limiter := NewRateLimiter(rps, burst)
 
