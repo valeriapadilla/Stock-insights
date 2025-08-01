@@ -10,8 +10,6 @@ import (
 type RecommendationRepository interface {
 	GetLatest(limit int) ([]*model.Recommendation, error)
 
-	BulkCreate(recommendations []*model.Recommendation) error
-
 	GetLatestRunAt() (*time.Time, error)
 
 	GetDB() *sql.DB

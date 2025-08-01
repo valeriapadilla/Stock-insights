@@ -4,7 +4,7 @@
 
 **Objective**: Stock insights system that supports 10K RPS with robust and scalable architecture.
 
-**Architecture**: CDN → Load Balancer → API Gateway → Services → Database
+**Architecture**: CDN → Load Balancer → API Server → Database
 
 **Timeline**: 1 week for functional MVP
 
@@ -51,13 +51,13 @@
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                                         │
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Monitoring    │    │   API Gateway   │    │   Workers       │
+│   Monitoring    │    │   API Server     │    │   Workers       │
 │   (UptimeRobot) │◀───│   (Go)          │◀───│   (Go)         │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                                 │                       │
                        ┌─────────────────┐    ┌─────────────────┐
-                       │   Cache         │    │   External API  │
-                       │   (Memory)      │    │   (karenai.click)│
+                       │   External API  │
+                       │   (karenai.click)│
                        └─────────────────┘    └─────────────────┘
                                 │
                        ┌─────────────────┐
@@ -85,7 +85,7 @@
 - **Functions**: Health checks, SSL termination
 - **Rate Limit**: 500 req/min per IP
 
-#### **API Gateway (Go)**
+#### **API Server (Go)**
 - **Framework**: Gin
 - **Functions**: Rate limiting, authentication, routing
 - **Rate Limit**: 100 req/min per IP
@@ -95,10 +95,7 @@
 - **Functions**: Ingestion, recommendations
 - **Frequency**: Daily
 
-#### **Cache (Memory)**
-- **Library**: `patrickmn/go-cache`
-- **TTL**: 5 minutes
-- **Functions**: Stocks, recommendations
+
 
 #### **Database (CockroachDB)**
 - **Plan**: Cloud Free Tier
@@ -215,7 +212,7 @@ GET /api/admin/health
   "timestamp": "2024-01-15T10:30:00Z",
   "database_connections": 45,
   "memory_usage": "2.1GB",
-  "cache_hit_rate": "95%",
+  
   "active_requests": 1234,
   "uptime": "2h 30m",
   "version": "1.0.0"
@@ -255,10 +252,7 @@ GET /api/admin/stats
   "total_stocks": 1000,
   "last_ingestion": "2024-01-15T06:00:00Z",
   "last_recommendations": "2024-01-15T06:00:00Z",
-  "cache_stats": {
-    "hit_rate": "95%",
-    "total_items": 1050
-  },
+
   "api_stats": {
     "requests_today": 50000,
     "avg_response_time": "15ms"
@@ -486,8 +480,7 @@ DATABASE_URL=postgres://user:pass@host:26257/stock_insights?sslmode=require
 EXTERNAL_API_URL=https://api.karenai.click
 EXTERNAL_API_KEY=your_api_key_here
 
-# Cache Configuration
-CACHE_TTL=5m
+
 
 # Rate Limiting
 RATE_LIMIT=100
@@ -507,7 +500,7 @@ ENABLE_TRACING=false
 ### **6.1 Rate Limiting**
 - **CDN**: 1000 req/min per IP
 - **Load Balancer**: 500 req/min per IP
-- **API Gateway**: 100 req/min per IP
+- **API Server**: 100 req/min per IP
 
 ### **6.2 Authentication**
 - **Public**: No auth (with rate limiting)
@@ -542,7 +535,7 @@ config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
 - **Requests/sec**: Prometheus
 - **Response time**: P95 < 300ms
 - **Error rate**: < 1%
-- **Cache hit rate**: > 90%
+
 
 ### **7.3 Logging**
 ```go
@@ -563,7 +556,7 @@ log.WithFields(log.Fields{
 ### **8.1 Unit Tests**
 - **Coverage**: > 80%
 - **Services**: Ingestion, recommendations
-- **Cache**: Memory cache operations
+
 - **Repository**: Database operations
 
 ### **8.2 Integration Tests**
@@ -598,49 +591,66 @@ log.WithFields(log.Fields{
 3.1 External API Client
 ✅ Crear: internal/client/external_api.go
 ✅ Test: Conectar a api.karenai.click
-✅ Test: Manejar paginación
+✅ Test: Manejar paginación con next_page
 ✅ Test: Manejar errores de red
 3.2 Data Worker (Cada 24 horas)
-✅ Crear: cmd/worker/data/main.go
-✅ Crear: internal/worker/data_worker.go
-✅ Test: Ingestion completa de datos
-✅ Test: Manejo de duplicados (upsert)
-✅ Test: Logging de progreso
-✅ Test: Ejecución manual y automática
+❌ Crear: cmd/worker/data/main.go
+❌ Crear: internal/worker/data_worker.go
+❌ Test: Ingestion completa de datos
+❌ Test: Manejo de duplicados (upsert)
+❌ Test: Logging de progreso
+❌ Test: Ejecución manual y automática
 3.3 Ingestion Endpoint (Manual trigger)
-✅ Crear: internal/handler/ingestion.go
-✅ Test: POST /api/admin/ingest (con JWT)
-✅ Test: Respuesta con status y progreso
+❌ Crear: internal/handler/ingestion.go
+❌ Test: POST /api/admin/ingest (con JWT)
+❌ Test: Respuesta con status y progreso
 
 🔌 Fase 5: API Server - Stock Endpoints (2 horas)
 5.1 Stock Service
 ✅ Crear: internal/service/stock_service.go
-✅ Test: Obtener stocks con filtros
-✅ Test: Paginación
-✅ Test: Búsqueda por ticker/company
+❌ Test: Obtener stocks con filtros
+❌ Test: Paginación
+❌ Test: Búsqueda por ticker/company
 5.2 Stock Handlers
-✅ Crear: internal/handler/stock.go
-✅ Test: GET /api/public/stocks
-✅ Test: GET /api/public/stocks/{ticker}
-✅ Test: Query parameters (sort, filter, page)
+❌ Crear: internal/handler/stock.go
+❌ Test: GET /api/public/stocks
+❌ Test: GET /api/public/stocks/{ticker}
+❌ Test: Query parameters (sort, filter, page)
 
 🤖 Fase 6: Recommendation Worker & Algorithm (3 horas)
 6.1 Recommendation Worker (Cada 24 horas)
-✅ Crear: cmd/worker/recommendation/main.go
-✅ Crear: internal/worker/recommendation_worker.go
-✅ Test: Cálculo automático diario
-✅ Test: Algoritmo de scoring básico
-✅ Test: Ranking de stocks
-✅ Test: Generación de explicaciones
+❌ Crear: cmd/worker/recommendation/main.go
+❌ Crear: internal/worker/recommendation_worker.go
+❌ Test: Cálculo automático diario
+❌ Test: Algoritmo de scoring básico
+❌ Test: Ranking de stocks
+❌ Test: Generación de explicaciones
 6.2 Recommendation Service
 ✅ Crear: internal/service/recommendation_service.go
-✅ Test: Algoritmo de scoring
-✅ Test: Ranking y explicaciones
-✅ Test: Cache de recommendations
+❌ Test: Algoritmo de scoring
+❌ Test: Ranking y explicaciones
+
 6.3 Recommendation Handlers
-✅ Crear: internal/handler/recommendation.go
-✅ Test: GET /api/public/recommendations
-✅ Test: Respuesta con top stocks
+❌ Crear: internal/handler/recommendation.go
+❌ Test: GET /api/public/recommendations
+❌ Test: Respuesta con top stocks
 6.4 Recommendation Endpoint (Manual trigger)
-✅ Test: POST /api/admin/recommendations (con JWT)
-✅ Test: Trigger manual de cálculo
+❌ Test: POST /api/admin/recommendations (con JWT)
+❌ Test: Trigger manual de cálculo
+
+🔧 Fase 7: CI/CD Pipeline (1 hora)
+7.1 GitHub Actions Setup
+❌ Crear: .github/workflows/ci.yml
+❌ Test: Build automático en push
+❌ Test: Tests automáticos
+❌ Test: Linting automático
+7.2 Deployment Pipeline
+❌ Crear: .github/workflows/deploy.yml
+❌ Test: Deploy automático en main
+❌ Test: Rollback automático
+❌ Test: Health checks post-deploy
+7.3 Environment Configuration
+❌ Configurar: Variables de entorno en GitHub
+❌ Configurar: Secrets para producción
+❌ Test: Deploy a staging
+❌ Test: Deploy a producción

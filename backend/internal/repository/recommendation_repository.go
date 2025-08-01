@@ -71,42 +71,6 @@ func (r *RecommendationRepositorySimple) GetLatest(limit int) ([]*model.Recommen
 	return recommendations, nil
 }
 
-func (r *RecommendationRepositorySimple) BulkCreate(recommendations []*model.Recommendation) error {
-	if len(recommendations) == 0 {
-		return nil
-	}
-
-	return r.ExecuteTransaction(func(tx *sql.Tx) error {
-		query := `
-			INSERT INTO recommendations (
-				id, ticker, score, explanation, run_at, rank
-			) VALUES ($1, $2, $3, $4, $5, $6)
-		`
-
-		stmt, err := tx.Prepare(query)
-		if err != nil {
-			return fmt.Errorf("failed to prepare statement: %w", err)
-		}
-		defer stmt.Close()
-
-		for _, recommendation := range recommendations {
-			if err := r.validator.Validate(recommendation); err != nil {
-				return fmt.Errorf("invalid recommendation: %w", err)
-			}
-
-			_, err := stmt.Exec(
-				recommendation.ID, recommendation.Ticker, recommendation.Score,
-				recommendation.Explanation, recommendation.RunAt, recommendation.Rank,
-			)
-			if err != nil {
-				return fmt.Errorf("failed to insert recommendation %s: %w", recommendation.ID, err)
-			}
-		}
-
-		return nil
-	})
-}
-
 func (r *RecommendationRepositorySimple) GetLatestRunAt() (*time.Time, error) {
 	query := "SELECT MAX(run_at) FROM recommendations"
 

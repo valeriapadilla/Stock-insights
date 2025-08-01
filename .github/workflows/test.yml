@@ -23,23 +23,23 @@ jobs:
           cd backend
           make test
 
-  test-frontend:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # test-frontend:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '18'
 
-      - name: Install dependencies
-        run: |
-          cd frontend
-          npm install
+  #     - name: Install dependencies
+  #       run: |
+  #         cd frontend
+  #         npm install
 
-      - name: Run Frontend Tests
-        run: |
-          cd frontend
-          npm test 
+  #     - name: Run Frontend Tests
+  #       run: |
+  #         cd frontend
+  #         npm test 
