@@ -50,7 +50,7 @@ func TestConnectWithMissingURL(t *testing.T) {
 	err := Connect()
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "DATABASE_URL is not set")
+	assert.Contains(t, err.Error(), "DATABASE_URL is required")
 }
 
 func TestPingWithoutConnection(t *testing.T) {

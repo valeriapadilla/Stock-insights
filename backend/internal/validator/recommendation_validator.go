@@ -55,10 +55,8 @@ func (v *RecommendationValidator) ValidateBulk(recommendations []*model.Recommen
 }
 
 func (v *RecommendationValidator) validateID(id string) error {
-	if id == "" {
-		return fmt.Errorf("cannot be empty")
-	}
-	if len(id) > 50 {
+	// Allow empty ID as database will generate UUID
+	if id != "" && len(id) > 50 {
 		return fmt.Errorf("must be 50 characters or less, got %d", len(id))
 	}
 	return nil

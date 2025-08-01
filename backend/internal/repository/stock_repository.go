@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/valeriapadilla/stock-insights/internal/model"
 	"github.com/valeriapadilla/stock-insights/internal/repository/interfaces"
@@ -92,4 +93,19 @@ func (r *StockRepository) Count(filters map[string]string) (int, error) {
 	}
 
 	return count, nil
+}
+
+func (r *StockRepository) GetLastUpdateTime() (*time.Time, error) {
+	query := "SELECT MAX(updated_at) FROM stocks"
+
+	var updatedAt *time.Time
+	err := r.GetDB().QueryRow(query).Scan(&updatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get last update time: %w", err)
+	}
+
+	return updatedAt, nil
 }

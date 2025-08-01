@@ -39,7 +39,7 @@ func (r *RecommendationRepositorySimple) GetLatest(limit int) ([]*model.Recommen
 	qb := NewQueryBuilder().
 		Select("id", "ticker", "score", "explanation", "run_at", "rank").
 		From("recommendations").
-		Where("run_at = ?", latestRunAt).
+		Where("run_at = $1", latestRunAt).
 		OrderBy("rank", "ASC").
 		Limit(limit)
 

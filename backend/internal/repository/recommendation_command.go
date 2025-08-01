@@ -35,8 +35,8 @@ func (c *RecommendationCommandImpl) BulkCreate(recommendations []*model.Recommen
 	defer tx.Rollback()
 
 	query := `
-		INSERT INTO recommendations (id, ticker, score, explanation, rank, run_at)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT INTO recommendations (ticker, score, explanation, rank, run_at)
+		VALUES ($1, $2, $3, $4, $5)
 	`
 
 	stmt, err := tx.Prepare(query)
@@ -51,7 +51,7 @@ func (c *RecommendationCommandImpl) BulkCreate(recommendations []*model.Recommen
 		}
 
 		_, err := stmt.Exec(
-			recommendation.ID, recommendation.Ticker, recommendation.Score,
+			recommendation.Ticker, recommendation.Score,
 			recommendation.Explanation, recommendation.Rank, recommendation.RunAt,
 		)
 		if err != nil {
@@ -71,9 +71,6 @@ func (c *RecommendationCommandImpl) validateRecommendation(recommendation *model
 		return fmt.Errorf("recommendation cannot be nil")
 	}
 
-	if recommendation.ID == "" {
-		return fmt.Errorf("id is required")
-	}
 	if recommendation.Ticker == "" {
 		return fmt.Errorf("ticker is required")
 	}

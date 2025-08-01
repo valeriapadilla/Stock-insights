@@ -10,7 +10,7 @@ import (
 )
 
 func TestRecommendationRepositoryCRUD(t *testing.T) {
-	repo, cleanup := setupRecommendationTest(t)
+	repo, command, cleanup := setupRecommendationTest(t)
 	defer cleanup()
 
 	now := time.Now()
@@ -27,7 +27,7 @@ func TestRecommendationRepositoryCRUD(t *testing.T) {
 		err := createTestStocksForRecommendations(t, stockRepo, testRecommendations)
 		require.NoError(t, err)
 
-		err = repo.BulkCreate(testRecommendations)
+		err = command.BulkCreate(testRecommendations)
 		require.NoError(t, err)
 
 		recommendations, err := repo.GetLatest(10)
@@ -44,11 +44,32 @@ func TestRecommendationRepositoryCRUD(t *testing.T) {
 
 	t.Run("GetLatest Recommendations", func(t *testing.T) {
 		cleanupRecommendationTest(t, repo, now)
-		err := repo.BulkCreate(testRecommendations)
+
+		// Create unique test data for this test
+		uniqueRecommendations := createTestRecommendationsWithCustomData(
+			[]string{"TEST1", "TEST2", "TEST3"},
+			[]float64{85.5, 82.3, 78.9},
+			now,
+		)
+
+		// Create stocks first (required for foreign key)
+		stockRepo := NewStockRepository(repo.GetDB())
+		err := createTestStocksForRecommendations(t, stockRepo, uniqueRecommendations)
 		require.NoError(t, err)
+
+		err = command.BulkCreate(uniqueRecommendations)
+		require.NoError(t, err)
+
+		// Debug: Check how many recommendations exist
+		var count int
+		err = repo.GetDB().QueryRow("SELECT COUNT(*) FROM recommendations").Scan(&count)
+		require.NoError(t, err)
+		t.Logf("Total recommendations in DB: %d", count)
 
 		recommendations, err := repo.GetLatest(2)
 		require.NoError(t, err)
+		t.Logf("GetLatest(2) returned: %d recommendations", len(recommendations))
+
 		assert.Len(t, recommendations, 2)
 
 		assert.Equal(t, 1, recommendations[0].Rank)
@@ -57,7 +78,7 @@ func TestRecommendationRepositoryCRUD(t *testing.T) {
 
 	t.Run("GetLatestRunAt", func(t *testing.T) {
 		cleanupRecommendationTest(t, repo, now)
-		err := repo.BulkCreate(testRecommendations)
+		err := command.BulkCreate(testRecommendations)
 		require.NoError(t, err)
 
 		latestRunAt, err := repo.GetLatestRunAt()
@@ -86,7 +107,7 @@ func TestRecommendationRepositoryCRUD(t *testing.T) {
 	})
 
 	t.Run("BulkCreate Empty Slice", func(t *testing.T) {
-		err := repo.BulkCreate([]*model.Recommendation{})
+		err := command.BulkCreate([]*model.Recommendation{})
 		require.NoError(t, err)
 	})
 
@@ -95,7 +116,7 @@ func TestRecommendationRepositoryCRUD(t *testing.T) {
 }
 
 func TestRecommendationRepositoryIntegration(t *testing.T) {
-	repo, cleanup := setupRecommendationTest(t)
+	repo, command, cleanup := setupRecommendationTest(t)
 	defer cleanup()
 
 	t.Run("Multiple Runs Same Day", func(t *testing.T) {
@@ -112,7 +133,7 @@ func TestRecommendationRepositoryIntegration(t *testing.T) {
 		err := createTestStocksForRecommendations(t, stockRepo, recommendations1)
 		require.NoError(t, err)
 
-		err = repo.BulkCreate(recommendations1)
+		err = command.BulkCreate(recommendations1)
 		require.NoError(t, err)
 
 		recommendations2 := createTestRecommendationsWithCustomData(
@@ -124,7 +145,7 @@ func TestRecommendationRepositoryIntegration(t *testing.T) {
 		err = createTestStocksForRecommendations(t, stockRepo, recommendations2)
 		require.NoError(t, err)
 
-		err = repo.BulkCreate(recommendations2)
+		err = command.BulkCreate(recommendations2)
 		require.NoError(t, err)
 
 		latest, err := repo.GetLatest(10)
@@ -144,7 +165,7 @@ func TestRecommendationRepositoryIntegration(t *testing.T) {
 		err := createTestStocksForRecommendations(t, stockRepo, recommendations)
 		require.NoError(t, err)
 
-		err = repo.BulkCreate(recommendations)
+		err = command.BulkCreate(recommendations)
 		require.NoError(t, err)
 
 		latest, err := repo.GetLatest(50)

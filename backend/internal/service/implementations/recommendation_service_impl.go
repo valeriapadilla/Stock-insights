@@ -12,14 +12,16 @@ import (
 
 type RecommendationServiceImpl struct {
 	recommendationRepo repoInterfaces.RecommendationRepository
+	recommendationCmd  repoInterfaces.RecommendationCommand
 	validator          *validator.RecommendationValidator
 }
 
 var _ serviceInterfaces.RecommendationService = (*RecommendationServiceImpl)(nil)
 
-func NewRecommendationService(recommendationRepo repoInterfaces.RecommendationRepository) *RecommendationServiceImpl {
+func NewRecommendationService(recommendationRepo repoInterfaces.RecommendationRepository, recommendationCmd repoInterfaces.RecommendationCommand) *RecommendationServiceImpl {
 	return &RecommendationServiceImpl{
 		recommendationRepo: recommendationRepo,
+		recommendationCmd:  recommendationCmd,
 		validator:          validator.NewRecommendationValidator(),
 	}
 }
@@ -44,7 +46,7 @@ func (s *RecommendationServiceImpl) CreateRecommendations(recommendations []*mod
 		return fmt.Errorf("business rules validation failed: %w", err)
 	}
 
-	if err := s.recommendationRepo.BulkCreate(recommendations); err != nil {
+	if err := s.recommendationCmd.BulkCreate(recommendations); err != nil {
 		return fmt.Errorf("failed to create recommendations: %w", err)
 	}
 

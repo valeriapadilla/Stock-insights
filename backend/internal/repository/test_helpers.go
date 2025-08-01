@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"github.com/valeriapadilla/stock-insights/internal/config"
 	"github.com/valeriapadilla/stock-insights/internal/database"
@@ -44,7 +43,7 @@ func cleanDatabase() {
 	}
 }
 
-func setupRecommendationTest(t *testing.T) (*RecommendationRepositorySimple, func()) {
+func setupRecommendationTest(t *testing.T) (*RecommendationRepositorySimple, *RecommendationCommandImpl, func()) {
 	testCfg := config.LoadTestConfig()
 	if !testCfg.HasTestDatabase() {
 		t.Skip("DATABASE_URL_TEST not set, skipping integration test")
@@ -54,19 +53,20 @@ func setupRecommendationTest(t *testing.T) (*RecommendationRepositorySimple, fun
 	require.NoError(t, err)
 
 	repo := NewRecommendationRepositorySimple(database.DB)
+	command := NewRecommendationCommand(database.DB)
 
 	cleanup := func() {
 		database.Close()
 	}
 
-	return repo, cleanup
+	return repo, command, cleanup
 }
 
 func createTestRecommendations(count int, baseTime time.Time) []*model.Recommendation {
 	recommendations := make([]*model.Recommendation, count)
 	for i := 0; i < count; i++ {
 		recommendations[i] = &model.Recommendation{
-			ID:          uuid.New().String(),
+			ID:          "", // Let database generate UUID
 			Ticker:      fmt.Sprintf("TEST%d", i),
 			Score:       float64(100 - i),
 			Explanation: fmt.Sprintf("Test recommendation %d", i),
@@ -85,7 +85,7 @@ func createTestRecommendationsWithCustomData(tickers []string, scores []float64,
 			score = scores[i]
 		}
 		recommendations[i] = &model.Recommendation{
-			ID:          uuid.New().String(),
+			ID:          "",
 			Ticker:      tickers[i],
 			Score:       score,
 			Explanation: fmt.Sprintf("Test recommendation for %s", tickers[i]),
