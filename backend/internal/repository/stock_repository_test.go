@@ -12,6 +12,11 @@ import (
 )
 
 func TestStockRepositoryCRUD(t *testing.T) {
+	testCfg := config.LoadTestConfig()
+	if !testCfg.HasTestDatabase() {
+		t.Skip("DATABASE_URL_TEST not set, skipping integration test")
+	}
+
 	err := connectToTestDatabase()
 	require.NoError(t, err)
 	defer database.Close()

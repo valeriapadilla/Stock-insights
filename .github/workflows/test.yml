@@ -19,6 +19,8 @@ jobs:
           go-version: '1.21'
 
       - name: Run Backend Tests
+        env:
+          DATABASE_URL_TEST: ${{ secrets.DATABASE_URL_TEST }}
         run: |
           cd backend
           make test
