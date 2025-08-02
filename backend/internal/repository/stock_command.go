@@ -30,7 +30,7 @@ func (c *StockCommandImpl) Create(stock *model.Stock) error {
 
 	query := `
 		INSERT INTO stocks (ticker, company, target_from, target_to, rating_from, rating_to, action, brokerage, time, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 	_, err := c.GetDB().Exec(query,
 		stock.Ticker, stock.Company, stock.TargetFrom, stock.TargetTo,
@@ -57,7 +57,7 @@ func (c *StockCommandImpl) BulkCreate(stocks []*model.Stock) error {
 
 	query := `
 		INSERT INTO stocks (ticker, company, target_from, target_to, rating_from, rating_to, action, brokerage, time, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 
 	stmt, err := tx.Prepare(query)
@@ -132,7 +132,7 @@ func (c *StockCommandImpl) BulkUpsert(stocks []*model.Stock) error {
 
 	query := `
 		INSERT INTO stocks (ticker, company, target_from, target_to, rating_from, rating_to, action, brokerage, time, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		ON CONFLICT (ticker, time) DO UPDATE SET
 			company = EXCLUDED.company,
 			target_from = EXCLUDED.target_from,
@@ -150,19 +150,25 @@ func (c *StockCommandImpl) BulkUpsert(stocks []*model.Stock) error {
 	}
 	defer stmt.Close()
 
+	processed := 0
+	errors := 0
+
 	for _, stock := range stocks {
 		if err := c.validateStock(stock); err != nil {
-			return fmt.Errorf("stock validation failed for %s: %w", stock.Ticker, err)
+			errors++
+			continue
 		}
-
 		_, err := stmt.Exec(
 			stock.Ticker, stock.Company, stock.TargetFrom, stock.TargetTo,
 			stock.RatingFrom, stock.RatingTo, stock.Action, stock.Brokerage, stock.Time,
 			stock.CreatedAt, stock.UpdatedAt,
 		)
 		if err != nil {
-			return fmt.Errorf("failed to upsert stock %s: %w", stock.Ticker, err)
+			errors++
+			continue
 		}
+
+		processed++
 	}
 
 	if err := tx.Commit(); err != nil {

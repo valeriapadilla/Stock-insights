@@ -26,20 +26,6 @@ func SetupLogging(cfg *config.Config) {
 	}
 
 	logrus.SetOutput(os.Stdout)
-
-	logrus.AddHook(&CorrelationIDHook{})
-}
-
-type CorrelationIDHook struct{}
-
-func (h *CorrelationIDHook) Levels() []logrus.Level {
-	return logrus.AllLevels
-}
-
-func (h *CorrelationIDHook) Fire(entry *logrus.Entry) error {
-	if entry.Context != nil {
-	}
-	return nil
 }
 
 func GetLogger() *logrus.Entry {

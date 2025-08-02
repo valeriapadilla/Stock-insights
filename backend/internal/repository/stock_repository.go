@@ -96,7 +96,7 @@ func (r *StockRepository) Count(filters map[string]string) (int, error) {
 }
 
 func (r *StockRepository) GetLastUpdateTime() (*time.Time, error) {
-	query := "SELECT MAX(updated_at) FROM stocks"
+	query := "SELECT MAX(time) FROM stocks"
 
 	var updatedAt *time.Time
 	err := r.GetDB().QueryRow(query).Scan(&updatedAt)
@@ -107,5 +107,22 @@ func (r *StockRepository) GetLastUpdateTime() (*time.Time, error) {
 		return nil, fmt.Errorf("failed to get last update time: %w", err)
 	}
 
+	// Check if the result is NULL (zero value) or empty table
+	if updatedAt == nil || updatedAt.IsZero() {
+		return nil, nil
+	}
+
 	return updatedAt, nil
+}
+
+func (r *StockRepository) ExistsByTicker(ticker string) (bool, error) {
+	query := "SELECT EXISTS(SELECT 1 FROM stocks WHERE ticker = $1 LIMIT 1)"
+
+	var exists bool
+	err := r.GetDB().QueryRow(query, ticker).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check if ticker exists: %w", err)
+	}
+
+	return exists, nil
 }

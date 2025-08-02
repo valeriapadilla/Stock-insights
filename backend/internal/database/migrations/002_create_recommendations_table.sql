@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS recommendations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    ticker TEXT REFERENCES stocks(ticker),
+    ticker TEXT NOT NULL,
     score NUMERIC NOT NULL,
     explanation TEXT,
     run_at TIMESTAMPTZ NOT NULL,

@@ -14,5 +14,7 @@ type StockRepository interface {
 
 	GetLastUpdateTime() (*time.Time, error)
 
+	ExistsByTicker(ticker string) (bool, error)
+
 	GetDB() *sql.DB
 }

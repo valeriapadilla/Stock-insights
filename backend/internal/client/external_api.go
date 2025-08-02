@@ -107,6 +107,9 @@ func (c *ExternalAPIClient) GetAllStocks(ctx context.Context) ([]model.Stock, er
 		if apiResponse.NextPage == "" {
 			break
 		}
+		if pageCount > 1 {
+			time.Sleep(100 * time.Millisecond)
+		}
 
 		nextPage = apiResponse.NextPage
 	}

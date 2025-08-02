@@ -53,7 +53,8 @@ func setupRecommendationTest(t *testing.T) (*RecommendationRepositorySimple, *Re
 	require.NoError(t, err)
 
 	repo := NewRecommendationRepositorySimple(database.DB)
-	command := NewRecommendationCommand(database.DB)
+	stockRepo := NewStockRepository(database.DB)
+	command := NewRecommendationCommand(database.DB, stockRepo)
 
 	cleanup := func() {
 		database.Close()

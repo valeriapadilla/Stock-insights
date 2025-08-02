@@ -4,16 +4,16 @@ import (
 	"log"
 
 	"github.com/sirupsen/logrus"
-	"github.com/valeriapadilla/stock-insights/internal/app"
-	"github.com/valeriapadilla/stock-insights/internal/config"
 	"github.com/valeriapadilla/stock-insights/internal/database"
 )
 
 func main() {
-	cfg := config.Load()
-	app.SetupLogging(cfg)
+	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
 
-	logrus.Info("🔄 Starting database migrations...")
+	logrus.Info("Starting database migrations...")
 
 	err := database.Connect()
 	if err != nil {

@@ -12,14 +12,16 @@ import (
 type RecommendationCommandImpl struct {
 	*BaseRepository
 	validator *validator.RecommendationValidator
+	stockRepo interfaces.StockRepository
 }
 
 var _ interfaces.RecommendationCommand = (*RecommendationCommandImpl)(nil)
 
-func NewRecommendationCommand(db *sql.DB) *RecommendationCommandImpl {
+func NewRecommendationCommand(db *sql.DB, stockRepo interfaces.StockRepository) *RecommendationCommandImpl {
 	return &RecommendationCommandImpl{
 		BaseRepository: NewBaseRepository(db),
 		validator:      validator.NewRecommendationValidator(),
+		stockRepo:      stockRepo,
 	}
 }
 
@@ -74,6 +76,15 @@ func (c *RecommendationCommandImpl) validateRecommendation(recommendation *model
 	if recommendation.Ticker == "" {
 		return fmt.Errorf("ticker is required")
 	}
+
+	exists, err := c.stockRepo.ExistsByTicker(recommendation.Ticker)
+	if err != nil {
+		return fmt.Errorf("failed to check if ticker exists: %w", err)
+	}
+	if !exists {
+		return fmt.Errorf("ticker %s not found in stocks table", recommendation.Ticker)
+	}
+
 	if err := c.validator.Validate(recommendation); err != nil {
 		return fmt.Errorf("recommendation validation failed: %w", err)
 	}
