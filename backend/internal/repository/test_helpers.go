@@ -10,6 +10,7 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/config"
 	"github.com/valeriapadilla/stock-insights/internal/database"
 	"github.com/valeriapadilla/stock-insights/internal/model"
+	repoInterfaces "github.com/valeriapadilla/stock-insights/internal/repository/interfaces"
 )
 
 func connectToTestDatabase() error {
@@ -182,7 +183,7 @@ func cleanupAllTestData(t *testing.T, repo *StockRepository) {
 	_, err = repo.GetDB().Exec(query)
 	require.NoError(t, err)
 
-	count, err := repo.Count(map[string]string{})
+	count, err := repo.GetStocksCount(repoInterfaces.GetStocksParams{})
 	require.NoError(t, err)
 	require.Equal(t, 0, count, "Database should be empty after cleanup")
 }

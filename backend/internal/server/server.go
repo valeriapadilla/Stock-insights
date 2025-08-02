@@ -6,9 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/valeriapadilla/stock-insights/internal/config"
+	"github.com/valeriapadilla/stock-insights/internal/database"
 	"github.com/valeriapadilla/stock-insights/internal/handler"
 	v1 "github.com/valeriapadilla/stock-insights/internal/handler/v1"
 	"github.com/valeriapadilla/stock-insights/internal/middleware"
+	"github.com/valeriapadilla/stock-insights/internal/repository"
 	"github.com/valeriapadilla/stock-insights/internal/service"
 	"github.com/valeriapadilla/stock-insights/internal/worker"
 )
@@ -52,9 +54,14 @@ func (s *Server) setupRoutes() {
 	{
 		publicV1 := v1API.Group("/public")
 		publicV1.GET("/health", handler.HealthCheck)
-		// publicV1.GET("/stocks", stockHandler.ListStocks)
-		// publicV1.GET("/stocks/:id", stockHandler.GetStock)
-		// publicV1.GET("/stocks/search", stockHandler.SearchStocks)
+
+		stockRepo := repository.NewStockRepository(database.DB)
+		stockService := service.NewStockService(stockRepo, s.logger)
+		stockHandler := v1.NewStocksHandler(stockService, s.logger)
+
+		publicV1.GET("/stocks", stockHandler.ListStocks)
+		publicV1.GET("/stocks/:ticket", stockHandler.GetStock)
+		publicV1.GET("/stocks/search", stockHandler.SearchStocks)
 
 		adminV1 := v1API.Group("/admin")
 		adminV1.Use(middleware.AuthMiddleware())

@@ -31,7 +31,15 @@ func (s *StockServiceImpl) GetStocksWithFilters(limit, offset int, filters map[s
 	limit = s.applyPaginationLimits(limit)
 	offset = s.applyOffsetLimits(offset)
 
-	stocks, err := s.stockRepo.GetAll(limit, offset, filters)
+	params := repoInterfaces.GetStocksParams{
+		Limit:   limit,
+		Offset:  offset,
+		Sort:    "time",
+		Order:   "desc",
+		Filters: filters,
+	}
+
+	stocks, err := s.stockRepo.GetStocks(params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stocks: %w", err)
 	}
@@ -44,7 +52,11 @@ func (s *StockServiceImpl) GetStocksCount(filters map[string]string) (int, error
 		return 0, fmt.Errorf("invalid filters: %w", err)
 	}
 
-	count, err := s.stockRepo.Count(filters)
+	params := repoInterfaces.GetStocksParams{
+		Filters: filters,
+	}
+
+	count, err := s.stockRepo.GetStocksCount(params)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count stocks: %w", err)
 	}

@@ -77,3 +77,10 @@ func NewExternalError(message string, err error) *AppError {
 		Err:     err,
 	}
 }
+
+func IsNotFoundError(err error) bool {
+	if appErr, ok := err.(*AppError); ok {
+		return appErr.Type == ErrorTypeNotFound
+	}
+	return false
+}
