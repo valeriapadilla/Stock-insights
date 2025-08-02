@@ -9,17 +9,17 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/database"
 	"github.com/valeriapadilla/stock-insights/internal/handler"
 	v1 "github.com/valeriapadilla/stock-insights/internal/handler/v1"
+	"github.com/valeriapadilla/stock-insights/internal/job"
 	"github.com/valeriapadilla/stock-insights/internal/middleware"
 	"github.com/valeriapadilla/stock-insights/internal/repository"
 	"github.com/valeriapadilla/stock-insights/internal/service"
-	"github.com/valeriapadilla/stock-insights/internal/worker"
 )
 
 type Server struct {
 	router           *gin.Engine
 	config           *config.Config
 	ingestionService *service.IngestionService
-	jobManager       *worker.JobManager
+	jobManager       *job.JobManager
 	logger           *logrus.Logger
 }
 
@@ -28,7 +28,7 @@ func NewServer(cfg *config.Config, ingestionService *service.IngestionService, l
 		config:           cfg,
 		router:           gin.New(),
 		ingestionService: ingestionService,
-		jobManager:       worker.NewJobManager(5, logger),
+		jobManager:       job.NewJobManager(5, logger),
 		logger:           logger,
 	}
 

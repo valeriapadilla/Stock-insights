@@ -13,9 +13,9 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/client"
 	"github.com/valeriapadilla/stock-insights/internal/config"
 	"github.com/valeriapadilla/stock-insights/internal/database"
+	"github.com/valeriapadilla/stock-insights/internal/job"
 	"github.com/valeriapadilla/stock-insights/internal/repository"
 	"github.com/valeriapadilla/stock-insights/internal/service"
-	"github.com/valeriapadilla/stock-insights/internal/worker"
 	"github.com/valeriapadilla/stock-insights/internal/worker/implementations"
 )
 
@@ -52,7 +52,7 @@ func main() {
 
 	ingestionService := service.NewIngestionService(dataWorker, logger)
 
-	jobManager := worker.NewJobManager(3, logger)
+	jobManager := job.NewJobManager(3, logger)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -71,7 +71,7 @@ func main() {
 	}
 }
 
-func runScheduler(ctx context.Context, ingestionService *service.IngestionService, jobManager *worker.JobManager, logger *logrus.Logger) error {
+func runScheduler(ctx context.Context, ingestionService *service.IngestionService, jobManager *job.JobManager, logger *logrus.Logger) error {
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
 
@@ -94,28 +94,22 @@ func runScheduler(ctx context.Context, ingestionService *service.IngestionServic
 	}
 }
 
-func runScheduledIngestion(ctx context.Context, ingestionService *service.IngestionService, jobManager *worker.JobManager, logger *logrus.Logger) error {
+func runScheduledIngestion(ctx context.Context, ingestionService *service.IngestionService, jobManager *job.JobManager, logger *logrus.Logger) error {
 	logger.WithContext(ctx).Info("Starting scheduled ingestion...")
 
 	job, err := jobManager.CreateJob()
 	if err != nil {
-		logger.WithContext(ctx).WithError(err).Error("Failed to create scheduled job")
+		logger.WithError(err).Error("Failed to create job")
 		return err
 	}
-
-	logger.WithContext(ctx).WithField("job_id", job.ID).Info("Created scheduled ingestion job")
 
 	if err := jobManager.RunJobAsync(job.ID, func(ctx context.Context) error {
 		return ingestionService.TriggerIngestionAsync(ctx)
 	}); err != nil {
-		logger.WithContext(ctx).WithError(err).Error("Failed to start scheduled ingestion job")
+		logger.WithError(err).Error("Failed to start ingestion job")
 		return err
 	}
 
-	logger.WithContext(ctx).WithFields(logrus.Fields{
-		"job_id": job.ID,
-		"type":   "scheduled",
-	}).Info("Scheduled ingestion job started successfully")
-
+	logger.WithField("job_id", job.ID).Info("Scheduled ingestion job started")
 	return nil
 }

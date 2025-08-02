@@ -594,28 +594,28 @@ log.WithFields(log.Fields{
 ✅ Test: Manejar paginación con next_page
 ✅ Test: Manejar errores de red
 3.2 Data Worker (Cada 24 horas)
-❌ Crear: cmd/worker/data/main.go
-❌ Crear: internal/worker/data_worker.go
-❌ Test: Ingestion completa de datos
-❌ Test: Manejo de duplicados (upsert)
-❌ Test: Logging de progreso
-❌ Test: Ejecución manual y automática
+✅ Crear: cmd/worker/data/main.go
+✅ Crear: internal/worker/data_worker.go
+✅ Test: Ingestion completa de datos
+✅ Test: Manejo de duplicados (upsert)
+✅ Test: Logging de progreso
+✅ Test: Ejecución manual y automática
 3.3 Ingestion Endpoint (Manual trigger)
-❌ Crear: internal/handler/ingestion.go
-❌ Test: POST /api/admin/ingest (con JWT)
-❌ Test: Respuesta con status y progreso
+✅ Crear: internal/handler/ingestion.go
+✅ Test: POST /api/v1/admin/ingest/stocks (con JWT)
+✅ Test: Respuesta con status y progreso
 
 🔌 Fase 5: API Server - Stock Endpoints (2 horas)
 5.1 Stock Service
 ✅ Crear: internal/service/stock_service.go
-❌ Test: Obtener stocks con filtros
-❌ Test: Paginación
-❌ Test: Búsqueda por ticker/company
+✅ Test: Obtener stocks con filtros
+✅ Test: Paginación
+✅ Test: Búsqueda por ticker/company
 5.2 Stock Handlers
-❌ Crear: internal/handler/stock.go
-❌ Test: GET /api/public/stocks
-❌ Test: GET /api/public/stocks/{ticker}
-❌ Test: Query parameters (sort, filter, page)
+✅ Crear: internal/handler/v1/stocks.go
+✅ Test: GET /api/v1/public/stocks
+✅ Test: GET /api/v1/public/stocks/{ticker}
+✅ Test: Query parameters (sort, filter, page)
 
 🤖 Fase 6: Recommendation Worker & Algorithm (3 horas)
 6.1 Recommendation Worker (Cada 24 horas)

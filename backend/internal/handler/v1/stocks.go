@@ -2,11 +2,9 @@ package v1
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/valeriapadilla/stock-insights/internal/errors"
 	"github.com/valeriapadilla/stock-insights/internal/service"
 )
 
@@ -23,32 +21,11 @@ func NewStocksHandler(stockService *service.StockService, logger *logrus.Logger)
 }
 
 func (h *StocksHandler) ListStocks(c *gin.Context) {
-	limitStr := c.DefaultQuery("limit", "50")
-	offsetStr := c.DefaultQuery("offset", "0")
-	sort := c.DefaultQuery("sort", "time")
-	order := c.DefaultQuery("order", "desc")
-
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit <= 0 {
-		limit = 50
-	}
-
-	offset, err := strconv.Atoi(offsetStr)
-	if err != nil || offset < 0 {
-		offset = 0
-	}
-
-	if order != "asc" && order != "desc" {
-		order = "desc"
-	}
+	limit, offset, sort, order := parsePaginationParams(c)
 
 	stocks, total, err := h.stockService.ListStocks(limit, offset, sort, order)
 	if err != nil {
-		h.logger.WithError(err).Error("Failed to list stocks")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Internal server error",
-			"message": "Failed to retrieve stocks",
-		})
+		handleError(c, err, "retrieve stocks", h.logger)
 		return
 	}
 
@@ -75,19 +52,7 @@ func (h *StocksHandler) GetStock(c *gin.Context) {
 
 	stock, err := h.stockService.GetStock(ticket)
 	if err != nil {
-		if errors.IsNotFoundError(err) {
-			c.JSON(http.StatusNotFound, gin.H{
-				"error":   "Not found",
-				"message": "Stock not found",
-			})
-			return
-		}
-
-		h.logger.WithError(err).Error("Failed to get stock")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Internal server error",
-			"message": "Failed to retrieve stock",
-		})
+		handleError(c, err, "retrieve stock", h.logger)
 		return
 	}
 
@@ -97,36 +62,12 @@ func (h *StocksHandler) GetStock(c *gin.Context) {
 }
 
 func (h *StocksHandler) SearchStocks(c *gin.Context) {
+	limit, offset, _, _ := parsePaginationParams(c)
+	minPrice, maxPrice := parsePriceParams(c)
+
 	ticket := c.Query("ticket")
 	dateFrom := c.Query("date_from")
 	dateTo := c.Query("date_to")
-	minPriceStr := c.Query("min_price")
-	maxPriceStr := c.Query("max_price")
-	limitStr := c.DefaultQuery("limit", "50")
-	offsetStr := c.DefaultQuery("offset", "0")
-
-	limit, err := strconv.Atoi(limitStr)
-	if err != nil || limit <= 0 {
-		limit = 50
-	}
-
-	offset, err := strconv.Atoi(offsetStr)
-	if err != nil || offset < 0 {
-		offset = 0
-	}
-
-	var minPrice, maxPrice *float64
-	if minPriceStr != "" {
-		if val, err := strconv.ParseFloat(minPriceStr, 64); err == nil {
-			minPrice = &val
-		}
-	}
-
-	if maxPriceStr != "" {
-		if val, err := strconv.ParseFloat(maxPriceStr, 64); err == nil {
-			maxPrice = &val
-		}
-	}
 
 	stocks, total, err := h.stockService.SearchStocks(service.StockSearchParams{
 		Ticket:   ticket,
@@ -139,11 +80,7 @@ func (h *StocksHandler) SearchStocks(c *gin.Context) {
 	})
 
 	if err != nil {
-		h.logger.WithError(err).Error("Failed to search stocks")
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Internal server error",
-			"message": "Failed to search stocks",
-		})
+		handleError(c, err, "search stocks", h.logger)
 		return
 	}
 
