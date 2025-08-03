@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	clientInterfaces "github.com/valeriapadilla/stock-insights/internal/client/interfaces"
+	"github.com/valeriapadilla/stock-insights/internal/client"
 	"github.com/valeriapadilla/stock-insights/internal/errors"
 	"github.com/valeriapadilla/stock-insights/internal/model"
 	repoInterfaces "github.com/valeriapadilla/stock-insights/internal/repository/interfaces"
@@ -19,7 +19,7 @@ type DataWorkerConfig struct {
 }
 
 type DataWorkerImpl struct {
-	externalClient clientInterfaces.ExternalAPIClient
+	externalClient *client.ExternalAPIClient
 	stockRepo      repoInterfaces.StockRepository
 	stockCommand   repoInterfaces.StockCommand
 	logger         *logrus.Logger
@@ -27,7 +27,7 @@ type DataWorkerImpl struct {
 }
 
 func NewDataWorker(
-	externalClient clientInterfaces.ExternalAPIClient,
+	externalClient *client.ExternalAPIClient,
 	stockRepo repoInterfaces.StockRepository,
 	stockCommand repoInterfaces.StockCommand,
 	logger *logrus.Logger,
@@ -153,10 +153,6 @@ func (w *DataWorkerImpl) FetchAndProcessStocksIncremental(ctx context.Context) e
 	}).Info("Successfully processed and saved stocks")
 
 	return nil
-}
-
-func (w *DataWorkerImpl) FetchAndProcessStocksSmart(ctx context.Context) error {
-	return w.FetchAndProcessStocksEfficient(ctx)
 }
 
 func (w *DataWorkerImpl) filterStocksByDate(allStocks []model.Stock, since time.Time) []model.Stock {

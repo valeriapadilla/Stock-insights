@@ -45,14 +45,12 @@ func TestRecommendationRepositoryCRUD(t *testing.T) {
 	t.Run("GetLatest Recommendations", func(t *testing.T) {
 		cleanupRecommendationTest(t, repo, now)
 
-		// Create unique test data for this test
 		uniqueRecommendations := createTestRecommendationsWithCustomData(
 			[]string{"TEST1", "TEST2", "TEST3"},
 			[]float64{85.5, 82.3, 78.9},
 			now,
 		)
 
-		// Create stocks first (required for foreign key)
 		stockRepo := NewStockRepository(repo.GetDB())
 		err := createTestStocksForRecommendations(t, stockRepo, uniqueRecommendations)
 		require.NoError(t, err)
@@ -60,7 +58,6 @@ func TestRecommendationRepositoryCRUD(t *testing.T) {
 		err = command.BulkCreate(uniqueRecommendations)
 		require.NoError(t, err)
 
-		// Debug: Check how many recommendations exist
 		var count int
 		err = repo.GetDB().QueryRow("SELECT COUNT(*) FROM recommendations").Scan(&count)
 		require.NoError(t, err)

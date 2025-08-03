@@ -6,4 +6,5 @@ import (
 
 type RecommendationCommand interface {
 	BulkCreate(recommendations []*model.Recommendation) error
+	DeleteAllRecommendations() error
 }

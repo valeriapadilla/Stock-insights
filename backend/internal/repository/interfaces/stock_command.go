@@ -6,10 +6,7 @@ import (
 
 type StockCommand interface {
 	Create(stock *model.Stock) error
-
 	BulkCreate(stocks []*model.Stock) error
-
 	Upsert(stock *model.Stock) error
-
 	BulkUpsert(stocks []*model.Stock) error
 }

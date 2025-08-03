@@ -95,3 +95,24 @@ func (v *RecommendationValidator) validateRank(rank int) error {
 	}
 	return nil
 }
+
+type RecommendationParams struct {
+	DaysBack   int `json:"days_back"`   // Default: 7 days
+	MaxResults int `json:"max_results"` // Default: 15
+	MinScore   int `json:"min_score"`   // Default: 50
+}
+
+func (v *RecommendationValidator) ValidateRecommendationParams(params RecommendationParams) RecommendationParams {
+	return RecommendationParams{
+		DaysBack:   v.ValidateLimit(params.DaysBack, 7),
+		MaxResults: v.ValidateLimit(params.MaxResults, 0), // No default aquí, lo maneja el handler
+		MinScore:   v.ValidateLimit(params.MinScore, 0),   // No default aquí, lo maneja el handler
+	}
+}
+
+func (v *RecommendationValidator) ValidateLimit(value, defaultValue int) int {
+	if value <= 0 {
+		return defaultValue
+	}
+	return value
+}

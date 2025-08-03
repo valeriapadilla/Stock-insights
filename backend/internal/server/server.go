@@ -52,6 +52,7 @@ func (s *Server) setupRoutes() {
 
 	v1API := s.router.Group("/api/v1")
 	{
+		// Public endpoints
 		publicV1 := v1API.Group("/public")
 		publicV1.GET("/health", handler.HealthCheck)
 
@@ -63,12 +64,22 @@ func (s *Server) setupRoutes() {
 		publicV1.GET("/stocks/:ticket", stockHandler.GetStock)
 		publicV1.GET("/stocks/search", stockHandler.SearchStocks)
 
+		recommendationRepo := repository.NewRecommendationRepository(database.DB)
+		recommendationCmd := repository.NewRecommendationCommand(database.DB, stockRepo)
+		recommendationService := service.NewRecommendationService(stockRepo, recommendationRepo, recommendationCmd, s.logger)
+		recommendationsHandler := v1.NewRecommendationsHandler(recommendationService, s.logger)
+
+		publicV1.GET("/recommendations", recommendationsHandler.GetRecommendations)
+
+		// Admin endpoints
 		adminV1 := v1API.Group("/admin")
 		adminV1.Use(middleware.AuthMiddleware())
 		{
 			stocksIngestionHandler := v1.NewStocksIngestionHandler(s.ingestionService, s.jobManager, s.logger)
 			adminV1.POST("/ingest/stocks", stocksIngestionHandler.TriggerIngestion)
 			adminV1.GET("/jobs/:jobId", stocksIngestionHandler.GetJobStatus)
+
+			adminV1.POST("/recommendations/calculate", recommendationsHandler.CalculateRecommendations)
 		}
 	}
 }

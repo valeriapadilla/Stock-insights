@@ -44,7 +44,7 @@ func cleanDatabase() {
 	}
 }
 
-func setupRecommendationTest(t *testing.T) (*RecommendationRepositorySimple, *RecommendationCommandImpl, func()) {
+func setupRecommendationTest(t *testing.T) (*RecommendationRepository, *RecommendationCommandImpl, func()) {
 	testCfg := config.LoadTestConfig()
 	if !testCfg.HasTestDatabase() {
 		t.Skip("DATABASE_URL_TEST not set, skipping integration test")
@@ -53,7 +53,7 @@ func setupRecommendationTest(t *testing.T) (*RecommendationRepositorySimple, *Re
 	err := connectToTestDatabase()
 	require.NoError(t, err)
 
-	repo := NewRecommendationRepositorySimple(database.DB)
+	repo := NewRecommendationRepository(database.DB)
 	stockRepo := NewStockRepository(database.DB)
 	command := NewRecommendationCommand(database.DB, stockRepo)
 
@@ -68,7 +68,7 @@ func createTestRecommendations(count int, baseTime time.Time) []*model.Recommend
 	recommendations := make([]*model.Recommendation, count)
 	for i := 0; i < count; i++ {
 		recommendations[i] = &model.Recommendation{
-			ID:          "", // Let database generate UUID
+			ID:          "",
 			Ticker:      fmt.Sprintf("TEST%d", i),
 			Score:       float64(100 - i),
 			Explanation: fmt.Sprintf("Test recommendation %d", i),
@@ -98,7 +98,7 @@ func createTestRecommendationsWithCustomData(tickers []string, scores []float64,
 	return recommendations
 }
 
-func cleanupRecommendationTest(t *testing.T, repo *RecommendationRepositorySimple, runAt time.Time) {
+func cleanupRecommendationTest(t *testing.T, repo *RecommendationRepository, runAt time.Time) {
 	cleanupRecommendations(t, repo, runAt)
 }
 
@@ -168,7 +168,7 @@ func cleanupStock(t *testing.T, repo *StockRepository, ticker string) {
 	require.NoError(t, err)
 }
 
-func cleanupRecommendations(t *testing.T, repo *RecommendationRepositorySimple, runAt time.Time) {
+func cleanupRecommendations(t *testing.T, repo *RecommendationRepository, runAt time.Time) {
 	query := "DELETE FROM recommendations WHERE run_at::date = $1::date"
 	_, err := repo.GetDB().Exec(query, runAt)
 	require.NoError(t, err)

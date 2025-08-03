@@ -556,19 +556,21 @@ log.WithFields(log.Fields{
 ### **8.1 Unit Tests**
 - **Coverage**: > 80%
 - **Services**: Ingestion, recommendations
-
 - **Repository**: Database operations
+- **Status**: Pendiente (no crítico para MVP)
 
 ### **8.2 Integration Tests**
 - **API endpoints**: All endpoints
 - **Database**: CRUD operations
 - **External API**: Mock responses
+- **Status**: Pendiente (no crítico para MVP)
 
 ### **8.3 Load Tests**
 - **Tool**: k6
 - **Target**: 1000 RPS (Free Tier), 5000 RPS (maximum)
 - **Duration**: 5 minutes
 - **Success criteria**: P95 < 300ms
+- **Status**: Pendiente (no crítico para MVP)
 
 ---
 
@@ -587,12 +589,14 @@ log.WithFields(log.Fields{
 ✅ Test: CRUD básico para stocks
 ✅ Crear: internal/repository/recommendation_repository.go
 ✅ Test: CRUD básico para recommendations
+✅ Test: Interfaces de repositories implementadas
 🔌 Fase 3: External API & Data Worker (3 horas)
 3.1 External API Client
 ✅ Crear: internal/client/external_api.go
 ✅ Test: Conectar a api.karenai.click
 ✅ Test: Manejar paginación con next_page
 ✅ Test: Manejar errores de red
+✅ Test: Implementación directa (sin interfaces)
 3.2 Data Worker (Cada 24 horas)
 ✅ Crear: cmd/worker/data/main.go
 ✅ Crear: internal/worker/data_worker.go
@@ -600,8 +604,9 @@ log.WithFields(log.Fields{
 ✅ Test: Manejo de duplicados (upsert)
 ✅ Test: Logging de progreso
 ✅ Test: Ejecución manual y automática
+✅ Test: Worker usando implementación directa
 3.3 Ingestion Endpoint (Manual trigger)
-✅ Crear: internal/handler/ingestion.go
+✅ Crear: internal/handler/v1/ingestion.go
 ✅ Test: POST /api/v1/admin/ingest/stocks (con JWT)
 ✅ Test: Respuesta con status y progreso
 
@@ -611,32 +616,35 @@ log.WithFields(log.Fields{
 ✅ Test: Obtener stocks con filtros
 ✅ Test: Paginación
 ✅ Test: Búsqueda por ticker/company
+✅ Test: Interfaces implementadas
 5.2 Stock Handlers
 ✅ Crear: internal/handler/v1/stocks.go
 ✅ Test: GET /api/v1/public/stocks
 ✅ Test: GET /api/v1/public/stocks/{ticker}
+✅ Test: GET /api/v1/public/stocks/search
 ✅ Test: Query parameters (sort, filter, page)
+✅ Test: Handlers usando interfaces
 
 🤖 Fase 6: Recommendation Worker & Algorithm (3 horas)
 6.1 Recommendation Worker (Cada 24 horas)
-❌ Crear: cmd/worker/recommendation/main.go
-❌ Crear: internal/worker/recommendation_worker.go
-❌ Test: Cálculo automático diario
-❌ Test: Algoritmo de scoring básico
-❌ Test: Ranking de stocks
-❌ Test: Generación de explicaciones
+✅ Crear: cmd/worker/recommendation/main.go
+✅ Crear: internal/worker/recommendation_worker.go
+✅ Test: Cálculo automático diario
+✅ Test: Algoritmo de scoring básico
+✅ Test: Ranking de stocks
+✅ Test: Generación de explicaciones
 6.2 Recommendation Service
 ✅ Crear: internal/service/recommendation_service.go
-❌ Test: Algoritmo de scoring
-❌ Test: Ranking y explicaciones
+✅ Test: Algoritmo de scoring
+✅ Test: Ranking y explicaciones
 
 6.3 Recommendation Handlers
-❌ Crear: internal/handler/recommendation.go
-❌ Test: GET /api/public/recommendations
-❌ Test: Respuesta con top stocks
+✅ Crear: internal/handler/v1/recommendations.go
+✅ Test: GET /api/v1/public/recommendations
+✅ Test: Respuesta con top stocks
 6.4 Recommendation Endpoint (Manual trigger)
-❌ Test: POST /api/admin/recommendations (con JWT)
-❌ Test: Trigger manual de cálculo
+✅ Test: POST /api/v1/admin/recommendations/calculate (con JWT)
+✅ Test: Trigger manual de cálculo
 
 🔧 Fase 7: CI/CD Pipeline (1 hora)
 7.1 GitHub Actions Setup

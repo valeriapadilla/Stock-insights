@@ -8,9 +8,8 @@ import (
 )
 
 type RecommendationRepository interface {
+	CreateRecommendation(recommendation *model.Recommendation) error
 	GetLatest(limit int) ([]*model.Recommendation, error)
-
 	GetLatestRunAt() (*time.Time, error)
-
 	GetDB() *sql.DB
 }

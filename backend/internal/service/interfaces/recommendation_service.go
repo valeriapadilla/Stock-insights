@@ -1,19 +1,12 @@
 package interfaces
 
 import (
-	"time"
-
 	"github.com/valeriapadilla/stock-insights/internal/model"
+	"github.com/valeriapadilla/stock-insights/internal/validator"
 )
 
-type RecommendationService interface {
+type RecommendationServiceInterface interface {
+	CalculateRecommendations(params validator.RecommendationParams) ([]*model.Recommendation, error)
 	GetLatestRecommendations(limit int) ([]*model.Recommendation, error)
-
-	CreateRecommendations(recommendations []*model.Recommendation) error
-
-	ShouldCalculateToday() (bool, error)
-
-	GetLatestRunAt() (*time.Time, error)
-
-	ValidateRecommendations(recommendations []*model.Recommendation) error
+	SaveRecommendations(recommendations []*model.Recommendation) error
 }

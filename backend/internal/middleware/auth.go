@@ -16,8 +16,8 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error":   "Authorization header required",
-				"message": "Use format: Bearer <token>",
+				"error":   "Unauthorized",
+				"message": "You are not allowed to access this resource. Authentication required.",
 			})
 			c.Abort()
 			return
@@ -26,8 +26,8 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error":   "Invalid authorization format",
-				"message": "Use format: Bearer <token>",
+				"error":   "Unauthorized",
+				"message": "Invalid authentication format. Use Bearer token.",
 			})
 			c.Abort()
 			return
@@ -62,8 +62,8 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error":   "Invalid token",
-				"message": err.Error(),
+				"error":   "Unauthorized",
+				"message": "Invalid or expired authentication token.",
 			})
 			c.Abort()
 			return
@@ -71,7 +71,8 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if !token.Valid {
 			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Invalid token",
+				"error":   "Unauthorized",
+				"message": "Invalid or expired authentication token.",
 			})
 			c.Abort()
 			return
@@ -80,7 +81,8 @@ func AuthMiddleware() gin.HandlerFunc {
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			if role, exists := claims["role"]; !exists || role != "admin" {
 				c.JSON(http.StatusForbidden, gin.H{
-					"error": "Admin role required",
+					"error":   "Forbidden",
+					"message": "You are not allowed to access this resource. Admin privileges required.",
 				})
 				c.Abort()
 				return

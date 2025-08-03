@@ -7,6 +7,7 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/errors"
 	"github.com/valeriapadilla/stock-insights/internal/model"
 	repoInterfaces "github.com/valeriapadilla/stock-insights/internal/repository/interfaces"
+	"github.com/valeriapadilla/stock-insights/internal/service/interfaces"
 )
 
 type StockService struct {
@@ -14,15 +15,7 @@ type StockService struct {
 	logger    *logrus.Logger
 }
 
-type StockSearchParams struct {
-	Ticket   string   `json:"ticket"`
-	DateFrom string   `json:"date_from"`
-	DateTo   string   `json:"date_to"`
-	MinPrice *float64 `json:"min_price"`
-	MaxPrice *float64 `json:"max_price"`
-	Limit    int      `json:"limit"`
-	Offset   int      `json:"offset"`
-}
+var _ interfaces.StockServiceInterface = (*StockService)(nil)
 
 func NewStockService(stockRepo repoInterfaces.StockRepository, logger *logrus.Logger) *StockService {
 	return &StockService{
@@ -79,7 +72,7 @@ func (s *StockService) GetStock(ticket string) (*model.Stock, error) {
 	return stock, nil
 }
 
-func (s *StockService) SearchStocks(params StockSearchParams) ([]*model.Stock, int, error) {
+func (s *StockService) SearchStocks(params interfaces.StockSearchParams) ([]*model.Stock, int, error) {
 	if params.Limit <= 0 {
 		params.Limit = 50
 	}

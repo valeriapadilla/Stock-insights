@@ -28,16 +28,10 @@ type GetStocksParams struct {
 
 type StockRepository interface {
 	GetStocks(params GetStocksParams) ([]*model.Stock, error)
-
 	GetStocksCount(params GetStocksParams) (int, error)
-
 	GetLastUpdateTime() (*time.Time, error)
-
 	ExistsByTicker(ticker string) (bool, error)
-
 	GetStockByTicket(ticket string) (*model.Stock, error)
-
 	SearchStocks(filters StockSearchFilters) ([]*model.Stock, error)
-
 	GetDB() *sql.DB
 }

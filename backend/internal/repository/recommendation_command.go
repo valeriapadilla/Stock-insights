@@ -91,3 +91,14 @@ func (c *RecommendationCommandImpl) validateRecommendation(recommendation *model
 
 	return nil
 }
+
+func (c *RecommendationCommandImpl) DeleteAllRecommendations() error {
+	query := `DELETE FROM recommendations`
+
+	_, err := c.GetDB().Exec(query)
+	if err != nil {
+		return fmt.Errorf("failed to delete all recommendations: %w", err)
+	}
+
+	return nil
+}

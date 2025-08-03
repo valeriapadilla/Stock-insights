@@ -5,15 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"github.com/valeriapadilla/stock-insights/internal/service"
+	"github.com/valeriapadilla/stock-insights/internal/service/interfaces"
 )
 
 type StocksHandler struct {
-	stockService *service.StockService
+	stockService interfaces.StockServiceInterface
 	logger       *logrus.Logger
 }
 
-func NewStocksHandler(stockService *service.StockService, logger *logrus.Logger) *StocksHandler {
+func NewStocksHandler(stockService interfaces.StockServiceInterface, logger *logrus.Logger) *StocksHandler {
 	return &StocksHandler{
 		stockService: stockService,
 		logger:       logger,
@@ -69,7 +69,7 @@ func (h *StocksHandler) SearchStocks(c *gin.Context) {
 	dateFrom := c.Query("date_from")
 	dateTo := c.Query("date_to")
 
-	stocks, total, err := h.stockService.SearchStocks(service.StockSearchParams{
+	stocks, total, err := h.stockService.SearchStocks(interfaces.StockSearchParams{
 		Ticket:   ticket,
 		DateFrom: dateFrom,
 		DateTo:   dateTo,

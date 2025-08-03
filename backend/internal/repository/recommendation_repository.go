@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/valeriapadilla/stock-insights/internal/model"
@@ -10,82 +9,143 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/validator"
 )
 
-// RecommendationRepositorySimple implements interfaces.RecommendationRepository
-type RecommendationRepositorySimple struct {
+type RecommendationRepository struct {
 	*BaseRepository
 	validator *validator.RecommendationValidator
 }
 
-// Ensure RecommendationRepositorySimple implements the interface
-var _ interfaces.RecommendationRepository = (*RecommendationRepositorySimple)(nil)
+var _ interfaces.RecommendationRepository = (*RecommendationRepository)(nil)
 
-func NewRecommendationRepositorySimple(db *sql.DB) *RecommendationRepositorySimple {
-	return &RecommendationRepositorySimple{
+func NewRecommendationRepository(db *sql.DB) *RecommendationRepository {
+	return &RecommendationRepository{
 		BaseRepository: NewBaseRepository(db),
 		validator:      validator.NewRecommendationValidator(),
 	}
 }
 
-func (r *RecommendationRepositorySimple) GetLatest(limit int) ([]*model.Recommendation, error) {
-	if limit <= 0 || limit > 1000 {
+func (r *RecommendationRepository) CreateRecommendation(recommendation *model.Recommendation) error {
+	query := `
+		INSERT INTO recommendations (id, ticker, score, explanation, run_at, rank)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`
+
+	_, err := r.GetDB().Exec(query,
+		recommendation.ID,
+		recommendation.Ticker,
+		recommendation.Score,
+		recommendation.Explanation,
+		recommendation.RunAt,
+		recommendation.Rank,
+	)
+
+	return err
+}
+
+func (r *RecommendationRepository) GetLatest(limit int) ([]*model.Recommendation, error) {
+	if limit <= 0 {
 		limit = 10
 	}
 
-	latestRunAt, err := r.GetLatestRunAt()
+	query := `
+		SELECT id, ticker, score, explanation, run_at, rank
+		FROM recommendations
+		WHERE run_at = (SELECT MAX(run_at) FROM recommendations)
+		ORDER BY rank ASC
+		LIMIT $1
+	`
+
+	rows, err := r.GetDB().Query(query, limit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get latest run_at: %w", err)
-	}
-
-	qb := NewQueryBuilder().
-		Select("id", "ticker", "score", "explanation", "run_at", "rank").
-		From("recommendations").
-		Where("run_at = $1", latestRunAt).
-		OrderBy("rank", "ASC").
-		Limit(limit)
-
-	query, args := qb.Build()
-
-	rows, err := r.GetDB().Query(query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get latest recommendations: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
 	var recommendations []*model.Recommendation
 	for rows.Next() {
-		var recommendation model.Recommendation
+		var rec model.Recommendation
 		err := rows.Scan(
-			&recommendation.ID, &recommendation.Ticker, &recommendation.Score,
-			&recommendation.Explanation, &recommendation.RunAt, &recommendation.Rank,
+			&rec.ID,
+			&rec.Ticker,
+			&rec.Score,
+			&rec.Explanation,
+			&rec.RunAt,
+			&rec.Rank,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan recommendation: %w", err)
+			return nil, err
 		}
-		recommendations = append(recommendations, &recommendation)
-	}
-
-	if len(recommendations) == 0 {
-		return nil, fmt.Errorf("no recommendations found")
+		recommendations = append(recommendations, &rec)
 	}
 
 	return recommendations, nil
 }
 
-func (r *RecommendationRepositorySimple) GetLatestRunAt() (*time.Time, error) {
-	query := "SELECT MAX(run_at) FROM recommendations"
+func (r *RecommendationRepository) GetRecommendationsByDate(date time.Time, limit int) ([]*model.Recommendation, error) {
+	if limit <= 0 {
+		limit = 10
+	}
 
-	var runAt *time.Time
-	err := r.GetDB().QueryRow(query).Scan(&runAt)
+	query := `
+		SELECT id, ticker, score, explanation, run_at, rank
+		FROM recommendations
+		WHERE DATE(run_at) = DATE($1)
+		ORDER BY rank ASC
+		LIMIT $2
+	`
+
+	rows, err := r.GetDB().Query(query, date, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var recommendations []*model.Recommendation
+	for rows.Next() {
+		var rec model.Recommendation
+		err := rows.Scan(
+			&rec.ID,
+			&rec.Ticker,
+			&rec.Score,
+			&rec.Explanation,
+			&rec.RunAt,
+			&rec.Rank,
+		)
+		if err != nil {
+			return nil, err
+		}
+		recommendations = append(recommendations, &rec)
+	}
+
+	return recommendations, nil
+}
+
+func (r *RecommendationRepository) GetLatestRunAt() (*time.Time, error) {
+	query := `SELECT MAX(run_at) FROM recommendations`
+
+	var lastRun time.Time
+	err := r.GetDB().QueryRow(query).Scan(&lastRun)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("no recommendations found")
+			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to get latest run_at: %w", err)
+		return nil, err
 	}
 
-	if runAt == nil {
-		return nil, fmt.Errorf("no recommendations found")
-	}
+	return &lastRun, nil
+}
 
-	return runAt, nil
+func (r *RecommendationRepository) DeleteOldRecommendations(maxAge time.Duration) error {
+	query := `DELETE FROM recommendations WHERE run_at < $1`
+
+	cutoff := time.Now().Add(-maxAge)
+	_, err := r.GetDB().Exec(query, cutoff)
+	return err
+}
+
+func (r *RecommendationRepository) GetRecommendationCount() (int, error) {
+	query := `SELECT COUNT(*) FROM recommendations`
+
+	var count int
+	err := r.GetDB().QueryRow(query).Scan(&count)
+	return count, err
 }

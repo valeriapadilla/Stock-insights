@@ -10,13 +10,11 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/validator"
 )
 
-// StockRepository implements interfaces.StockRepository
 type StockRepository struct {
 	*BaseRepository
 	validator *validator.CommonValidator
 }
 
-// Ensure StockRepository implements the interface
 var _ interfaces.StockRepository = (*StockRepository)(nil)
 
 func NewStockRepository(db *sql.DB) *StockRepository {
@@ -322,7 +320,6 @@ func (r *StockRepository) GetLastUpdateTime() (*time.Time, error) {
 		return nil, fmt.Errorf("failed to get last update time: %w", err)
 	}
 
-	// Check if the result is NULL (zero value) or empty table
 	if updatedAt == nil || updatedAt.IsZero() {
 		return nil, nil
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/valeriapadilla/stock-insights/internal/errors"
+	"github.com/valeriapadilla/stock-insights/internal/service/interfaces"
 	workerInterfaces "github.com/valeriapadilla/stock-insights/internal/worker/interfaces"
 )
 
@@ -12,6 +13,8 @@ type IngestionService struct {
 	dataWorker workerInterfaces.DataWorker
 	logger     *logrus.Logger
 }
+
+var _ interfaces.IngestionServiceInterface = (*IngestionService)(nil)
 
 func NewIngestionService(dataWorker workerInterfaces.DataWorker, logger *logrus.Logger) *IngestionService {
 	return &IngestionService{

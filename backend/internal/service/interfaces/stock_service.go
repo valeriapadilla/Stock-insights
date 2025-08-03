@@ -4,10 +4,18 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/model"
 )
 
-type StockService interface {
-	GetStocksWithFilters(limit, offset int, filters map[string]string) ([]*model.Stock, error)
+type StockSearchParams struct {
+	Ticket   string   `json:"ticket"`
+	DateFrom string   `json:"date_from"`
+	DateTo   string   `json:"date_to"`
+	MinPrice *float64 `json:"min_price"`
+	MaxPrice *float64 `json:"max_price"`
+	Limit    int      `json:"limit"`
+	Offset   int      `json:"offset"`
+}
 
-	GetStocksCount(filters map[string]string) (int, error)
-
-	ValidateFilters(filters map[string]string) error
+type StockServiceInterface interface {
+	ListStocks(limit, offset int, sort, order string) ([]*model.Stock, int, error)
+	GetStock(ticket string) (*model.Stock, error)
+	SearchStocks(params StockSearchParams) ([]*model.Stock, int, error)
 }
