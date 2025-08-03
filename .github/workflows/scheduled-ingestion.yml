@@ -1,0 +1,33 @@
+name: Scheduled Stock Ingestion
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch: 
+
+jobs:
+  ingest-stocks:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        
+    - name: Build ingestion worker
+      run: |
+        cd backend
+        go build -o ingestion-worker ./cmd/worker/scheduler/
+        
+    - name: Run ingestion
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        EXTERNAL_API_URL: ${{ secrets.EXTERNAL_API_URL }}
+        EXTERNAL_API_KEY: ${{ secrets.EXTERNAL_API_KEY }}
+      run: |
+        cd backend
+        ./ingestion-worker 

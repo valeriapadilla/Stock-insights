@@ -72,26 +72,15 @@ func main() {
 }
 
 func runScheduler(ctx context.Context, ingestionService *service.IngestionService, jobManager *job.JobManager, logger *logrus.Logger) error {
-	ticker := time.NewTicker(24 * time.Hour)
-	defer ticker.Stop()
-
-	logger.Info("Starting scheduler with 24-hour interval")
+	logger.Info("Starting single ingestion execution")
 
 	if err := runScheduledIngestion(ctx, ingestionService, jobManager, logger); err != nil {
-		logger.WithError(err).Error("Initial scheduled ingestion failed")
+		logger.WithError(err).Error("Ingestion failed")
+		return err
 	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			logger.Info("Scheduler stopped")
-			return nil
-		case <-ticker.C:
-			if err := runScheduledIngestion(ctx, ingestionService, jobManager, logger); err != nil {
-				logger.WithError(err).Error("Scheduled ingestion failed")
-			}
-		}
-	}
+	logger.Info("Ingestion completed successfully")
+	return nil
 }
 
 func runScheduledIngestion(ctx context.Context, ingestionService *service.IngestionService, jobManager *job.JobManager, logger *logrus.Logger) error {
