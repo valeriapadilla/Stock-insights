@@ -3,20 +3,15 @@ package main
 import (
 	"context"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/valeriapadilla/stock-insights/internal/app"
 	"github.com/valeriapadilla/stock-insights/internal/client"
 	"github.com/valeriapadilla/stock-insights/internal/config"
 	"github.com/valeriapadilla/stock-insights/internal/database"
-	"github.com/valeriapadilla/stock-insights/internal/job"
 	"github.com/valeriapadilla/stock-insights/internal/repository"
-	"github.com/valeriapadilla/stock-insights/internal/service"
 	"github.com/valeriapadilla/stock-insights/internal/worker/implementations"
+	workerInterfaces "github.com/valeriapadilla/stock-insights/internal/worker/interfaces"
 )
 
 func main() {
@@ -43,62 +38,26 @@ func main() {
 		stockRepo,
 		stockCmd,
 		logger,
-		implementations.DataWorkerConfig{
-			ScheduleInterval: 24 * time.Hour,
-			MaxRetries:       3,
-			RetryDelay:       5 * time.Second,
-		},
+		implementations.DataWorkerConfig{},
 	)
 
-	ingestionService := service.NewIngestionService(dataWorker, logger)
+	ctx := context.Background()
 
-	jobManager := job.NewJobManager(3, logger)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-sigChan
-		logger.Info("Shutting down Scheduled Data Worker...")
-		cancel()
-	}()
-
-	if err := runScheduler(ctx, ingestionService, jobManager, logger); err != nil {
-		log.Fatal("Scheduler failed:", err)
-	}
-}
-
-func runScheduler(ctx context.Context, ingestionService *service.IngestionService, jobManager *job.JobManager, logger *logrus.Logger) error {
-	logger.Info("Starting single ingestion execution")
-
-	if err := runScheduledIngestion(ctx, ingestionService, jobManager, logger); err != nil {
-		logger.WithError(err).Error("Ingestion failed")
-		return err
+	if err := runIngestion(ctx, dataWorker, logger); err != nil {
+		log.Fatal("Ingestion failed:", err)
 	}
 
 	logger.Info("Ingestion completed successfully")
-	return nil
 }
 
-func runScheduledIngestion(ctx context.Context, ingestionService *service.IngestionService, jobManager *job.JobManager, logger *logrus.Logger) error {
-	logger.WithContext(ctx).Info("Starting scheduled ingestion...")
+func runIngestion(ctx context.Context, dataWorker workerInterfaces.DataWorker, logger *logrus.Logger) error {
+	logger.Info("Starting scheduled ingestion...")
 
-	job, err := jobManager.CreateJob()
-	if err != nil {
-		logger.WithError(err).Error("Failed to create job")
+	if err := dataWorker.FetchAndProcessStocks(ctx); err != nil {
+		logger.WithError(err).Error("Failed to complete ingestion")
 		return err
 	}
 
-	if err := jobManager.RunJobAsync(job.ID, func(ctx context.Context) error {
-		return ingestionService.TriggerIngestionAsync(ctx)
-	}); err != nil {
-		logger.WithError(err).Error("Failed to start ingestion job")
-		return err
-	}
-
-	logger.WithField("job_id", job.ID).Info("Scheduled ingestion job started")
+	logger.Info("Scheduled ingestion completed successfully")
 	return nil
 }
