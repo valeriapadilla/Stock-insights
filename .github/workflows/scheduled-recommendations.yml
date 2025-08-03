@@ -2,7 +2,7 @@ name: Scheduled Recommendations
 
 on:
   schedule:
-    - cron: '30 4 * * *'
+    - cron: '30 17 * * *'  
   workflow_dispatch: 
 
 jobs:

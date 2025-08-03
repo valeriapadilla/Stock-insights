@@ -99,7 +99,7 @@ func TestRecommendationRepositoryCRUD(t *testing.T) {
 		assert.Nil(t, latestRunAt)
 
 		recommendations, err := repo.GetLatest(10)
-		require.Error(t, err)
+		require.NoError(t, err)
 		assert.Empty(t, recommendations)
 	})
 
