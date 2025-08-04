@@ -42,12 +42,21 @@ jobs:
           echo "Build completed!"
 
       - name: Deploy to Railway
+<<<<<<< HEAD
         if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
         uses: bervProject/railway-deploy@main
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         with:
           service: "Stock-insights"
+=======
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "Deploying to Railway..."
+          cd backend
+          railway up --service Stock-insights
+>>>>>>> 96bf521 (updating ci/cd)
 
   # deploy-frontend:
   #   runs-on: ubuntu-latest
