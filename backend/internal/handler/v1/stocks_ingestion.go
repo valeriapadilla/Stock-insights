@@ -7,16 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/valeriapadilla/stock-insights/internal/job"
-	"github.com/valeriapadilla/stock-insights/internal/service"
+	"github.com/valeriapadilla/stock-insights/internal/service/interfaces"
 )
 
 type StocksIngestionHandler struct {
-	ingestionService *service.IngestionService
-	jobManager       *job.JobManager
+	ingestionService interfaces.IngestionServiceInterface
+	jobManager       job.JobManagerInterface
 	logger           *logrus.Logger
 }
 
-func NewStocksIngestionHandler(ingestionService *service.IngestionService, jobManager *job.JobManager, logger *logrus.Logger) *StocksIngestionHandler {
+func NewStocksIngestionHandler(ingestionService interfaces.IngestionServiceInterface, jobManager job.JobManagerInterface, logger *logrus.Logger) *StocksIngestionHandler {
 	return &StocksIngestionHandler{
 		ingestionService: ingestionService,
 		jobManager:       jobManager,

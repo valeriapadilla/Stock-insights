@@ -15,7 +15,6 @@ import (
 	serviceInterfaces "github.com/valeriapadilla/stock-insights/internal/service/interfaces"
 )
 
-// Mock implementations
 type MockStockService struct {
 	mock.Mock
 }
@@ -38,7 +37,6 @@ func (m *MockStockService) SearchStocks(params serviceInterfaces.StockSearchPara
 	return args.Get(0).([]*model.Stock), args.Int(1), args.Error(2)
 }
 
-// Tests
 func TestStocksHandler_ListStocks(t *testing.T) {
 	tests := []struct {
 		name           string

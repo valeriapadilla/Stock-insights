@@ -11,7 +11,6 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/validator"
 )
 
-// Tests
 func TestRecommendationService_CalculateRecommendations(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -95,14 +94,12 @@ func TestRecommendationService_CalculateRecommendations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup mocks
 			mockStockRepo := &MockStockRepository{}
 			mockRecRepo := &MockRecommendationRepository{}
 			mockRecCmd := &MockRecommendationCommand{}
 
 			tt.setupMocks(mockStockRepo, mockRecCmd)
 
-			// Create service with real validator and logger
 			service := &RecommendationService{
 				stockRepo:          mockStockRepo,
 				recommendationRepo: mockRecRepo,
@@ -112,10 +109,8 @@ func TestRecommendationService_CalculateRecommendations(t *testing.T) {
 				scoringConfig:      DefaultScoringConfig(),
 			}
 
-			// Execute
 			recommendations, err := service.CalculateRecommendations(tt.params)
 
-			// Assert
 			if tt.expectedError {
 				assert.Error(t, err)
 			} else {
@@ -123,7 +118,6 @@ func TestRecommendationService_CalculateRecommendations(t *testing.T) {
 				assert.Len(t, recommendations, tt.expectedCount)
 			}
 
-			// Verify mocks
 			mockStockRepo.AssertExpectations(t)
 			mockRecCmd.AssertExpectations(t)
 		})
@@ -169,14 +163,12 @@ func TestRecommendationService_GetLatestRecommendations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup mocks
 			mockStockRepo := &MockStockRepository{}
 			mockRecRepo := &MockRecommendationRepository{}
 			mockRecCmd := &MockRecommendationCommand{}
 
 			tt.setupMocks(mockRecRepo)
 
-			// Create service
 			service := &RecommendationService{
 				stockRepo:          mockStockRepo,
 				recommendationRepo: mockRecRepo,
@@ -186,10 +178,8 @@ func TestRecommendationService_GetLatestRecommendations(t *testing.T) {
 				scoringConfig:      DefaultScoringConfig(),
 			}
 
-			// Execute
 			recommendations, err := service.GetLatestRecommendations(tt.limit)
 
-			// Assert
 			if tt.expectedError {
 				assert.Error(t, err)
 			} else {
@@ -197,7 +187,6 @@ func TestRecommendationService_GetLatestRecommendations(t *testing.T) {
 				assert.Len(t, recommendations, tt.expectedCount)
 			}
 
-			// Verify mocks
 			mockRecRepo.AssertExpectations(t)
 		})
 	}
@@ -235,14 +224,12 @@ func TestRecommendationService_SaveRecommendations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup mocks
 			mockStockRepo := &MockStockRepository{}
 			mockRecRepo := &MockRecommendationRepository{}
 			mockRecCmd := &MockRecommendationCommand{}
 
 			tt.setupMocks(mockRecRepo)
 
-			// Create service
 			service := &RecommendationService{
 				stockRepo:          mockStockRepo,
 				recommendationRepo: mockRecRepo,
@@ -252,17 +239,14 @@ func TestRecommendationService_SaveRecommendations(t *testing.T) {
 				scoringConfig:      DefaultScoringConfig(),
 			}
 
-			// Execute
 			err := service.SaveRecommendations(tt.recommendations)
 
-			// Assert
 			if tt.expectedError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
 
-			// Verify mocks
 			mockRecRepo.AssertExpectations(t)
 		})
 	}

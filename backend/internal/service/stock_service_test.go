@@ -11,7 +11,6 @@ import (
 	serviceInterfaces "github.com/valeriapadilla/stock-insights/internal/service/interfaces"
 )
 
-// Tests
 func TestStockService_ListStocks(t *testing.T) {
 	tests := []struct {
 		name          string
@@ -96,21 +95,17 @@ func TestStockService_ListStocks(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup mocks
 			mockStockRepo := &MockStockRepository{}
 
 			tt.setupMocks(mockStockRepo)
 
-			// Create service
 			service := &StockService{
 				stockRepo: mockStockRepo,
 				logger:    logrus.New(),
 			}
 
-			// Execute
 			stocks, count, err := service.ListStocks(tt.limit, tt.offset, tt.sort, tt.order)
 
-			// Assert
 			if tt.expectedError {
 				assert.Error(t, err)
 			} else {
@@ -119,7 +114,6 @@ func TestStockService_ListStocks(t *testing.T) {
 				assert.Equal(t, tt.mockCount, count)
 			}
 
-			// Verify mocks
 			mockStockRepo.AssertExpectations(t)
 		})
 	}
@@ -171,21 +165,17 @@ func TestStockService_GetStock(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup mocks
 			mockStockRepo := &MockStockRepository{}
 
 			tt.setupMocks(mockStockRepo)
 
-			// Create service
 			service := &StockService{
 				stockRepo: mockStockRepo,
 				logger:    logrus.New(),
 			}
 
-			// Execute
 			stock, err := service.GetStock(tt.ticket)
 
-			// Assert
 			if tt.expectedError {
 				assert.Error(t, err)
 				assert.Nil(t, stock)
@@ -195,7 +185,6 @@ func TestStockService_GetStock(t *testing.T) {
 				assert.Equal(t, tt.ticket, stock.Ticker)
 			}
 
-			// Verify mocks
 			mockStockRepo.AssertExpectations(t)
 		})
 	}
@@ -268,21 +257,17 @@ func TestStockService_SearchStocks(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup mocks
 			mockStockRepo := &MockStockRepository{}
 
 			tt.setupMocks(mockStockRepo)
 
-			// Create service
 			service := &StockService{
 				stockRepo: mockStockRepo,
 				logger:    logrus.New(),
 			}
 
-			// Execute
 			stocks, count, err := service.SearchStocks(tt.params)
 
-			// Assert
 			if tt.expectedError {
 				assert.Error(t, err)
 			} else {
@@ -291,7 +276,6 @@ func TestStockService_SearchStocks(t *testing.T) {
 				assert.Equal(t, tt.mockCount, count)
 			}
 
-			// Verify mocks
 			mockStockRepo.AssertExpectations(t)
 		})
 	}

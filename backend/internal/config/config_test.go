@@ -6,92 +6,159 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestLoadWithDefaultValues(t *testing.T) {
-	os.Clearenv()
-	os.Setenv("ENVIRONMENT", "test")
-
+func TestConfig_Load(t *testing.T) {
 	config := Load()
+
+	assert.NotNil(t, config)
 	assert.Equal(t, "8080", config.Port)
-	assert.Equal(t, "test", config.Environment)
+	assert.Equal(t, "development", config.Environment)
 	assert.Equal(t, "info", config.LogLevel)
 	assert.Equal(t, "https://api.karenai.click", config.ExternalAPIURL)
 	assert.Equal(t, 5*time.Minute, config.CacheTTL)
 	assert.Equal(t, 100, config.RateLimit)
 }
 
-func TestLoadWithEnvVariables(t *testing.T) {
-	os.Setenv("ENVIRONMENT", "test")
+func TestConfig_LoadWithEnvironment(t *testing.T) {
 	os.Setenv("PORT", "9090")
+	os.Setenv("ENVIRONMENT", "production")
 	os.Setenv("LOG_LEVEL", "debug")
-	os.Setenv("EXTERNAL_API_URL", "https://test-api.com")
+	os.Setenv("DATABASE_URL", "postgres://test")
+	os.Setenv("EXTERNAL_API_KEY", "test-key")
 	os.Setenv("CACHE_TTL", "10m")
 	os.Setenv("RATE_LIMIT", "200")
+	os.Setenv("ADMIN_API_KEY", "admin-key")
+
+	defer func() {
+		os.Unsetenv("PORT")
+		os.Unsetenv("ENVIRONMENT")
+		os.Unsetenv("LOG_LEVEL")
+		os.Unsetenv("DATABASE_URL")
+		os.Unsetenv("EXTERNAL_API_KEY")
+		os.Unsetenv("CACHE_TTL")
+		os.Unsetenv("RATE_LIMIT")
+		os.Unsetenv("ADMIN_API_KEY")
+	}()
 
 	config := Load()
 
 	assert.Equal(t, "9090", config.Port)
-	assert.Equal(t, "test", config.Environment) // Changed from production to test
+	assert.Equal(t, "production", config.Environment)
 	assert.Equal(t, "debug", config.LogLevel)
-	assert.Equal(t, "https://test-api.com", config.ExternalAPIURL)
+	assert.Equal(t, "postgres://test", config.DatabaseURL)
+	assert.Equal(t, "test-key", config.ExternalAPIKey)
 	assert.Equal(t, 10*time.Minute, config.CacheTTL)
 	assert.Equal(t, 200, config.RateLimit)
-
-	os.Clearenv()
+	assert.Equal(t, "admin-key", config.AdminAPIKey)
 }
 
-func TestLoadWithEnvFile(t *testing.T) {
-	envContent := `PORT=7070
-	ENVIRONMENT=test
-	LOG_LEVEL=warn
-	EXTERNAL_API_URL=https://staging-api.com
-	CACHE_TTL=15m 
-	RATE_LIMIT=150`
+func TestConfig_Validate(t *testing.T) {
+	tests := []struct {
+		name        string
+		config      *Config
+		expectError bool
+	}{
+		{
+			name: "valid config",
+			config: &Config{
+				Environment: "development",
+				DatabaseURL: "postgres://test",
+				RateLimit:   100,
+			},
+			expectError: false,
+		},
+		{
+			name: "test environment - no validation",
+			config: &Config{
+				Environment: "test",
+				DatabaseURL: "",
+				RateLimit:   0,
+			},
+			expectError: false,
+		},
+		{
+			name: "missing database URL",
+			config: &Config{
+				Environment: "development",
+				DatabaseURL: "",
+				RateLimit:   100,
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid environment",
+			config: &Config{
+				Environment: "invalid",
+				DatabaseURL: "postgres://test",
+				RateLimit:   100,
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid rate limit",
+			config: &Config{
+				Environment: "development",
+				DatabaseURL: "postgres://test",
+				RateLimit:   0,
+			},
+			expectError: true,
+		},
+	}
 
-	err := os.WriteFile(".env", []byte(envContent), 0644)
-	require.NoError(t, err)
-	defer os.Remove(".env")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.config.Validate()
+			if tt.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
 
-	config := Load()
+func TestGetEnv(t *testing.T) {
+	os.Setenv("TEST_KEY", "test-value")
+	defer os.Unsetenv("TEST_KEY")
 
-	assert.Equal(t, "7070", config.Port)
-	assert.Equal(t, "test", config.Environment) // Changed from staging to test
-	assert.Equal(t, "warn", config.LogLevel)
-	assert.Equal(t, "https://staging-api.com", config.ExternalAPIURL)
-	assert.Equal(t, 15*time.Minute, config.CacheTTL)
-	assert.Equal(t, 150, config.RateLimit)
+	value := getEnv("TEST_KEY", "default")
+	assert.Equal(t, "test-value", value)
+
+	value = getEnv("NON_EXISTENT_KEY", "default")
+	assert.Equal(t, "default", value)
+}
+
+func TestGetEnvAsInt(t *testing.T) {
+	os.Setenv("TEST_INT", "123")
+	defer os.Unsetenv("TEST_INT")
+
+	value := getEnvAsInt("TEST_INT", 0)
+	assert.Equal(t, 123, value)
+
+	os.Setenv("TEST_INVALID", "not-a-number")
+	defer os.Unsetenv("TEST_INVALID")
+
+	value = getEnvAsInt("TEST_INVALID", 456)
+	assert.Equal(t, 456, value)
+
+	value = getEnvAsInt("NON_EXISTENT_INT", 789)
+	assert.Equal(t, 789, value)
 }
 
 func TestGetEnvAsDuration(t *testing.T) {
 	os.Setenv("TEST_DURATION", "5m")
-	duration := getEnvAsDuration("TEST_DURATION", 1*time.Minute)
-	assert.Equal(t, 5*time.Minute, duration)
+	defer os.Unsetenv("TEST_DURATION")
 
-	os.Setenv("TEST_DURATION", "invalid")
-	duration = getEnvAsDuration("TEST_DURATION", 1*time.Minute)
-	assert.Equal(t, 1*time.Minute, duration)
+	value := getEnvAsDuration("TEST_DURATION", time.Hour)
+	assert.Equal(t, 5*time.Minute, value)
 
-	os.Unsetenv("TEST_DURATION")
-	duration = getEnvAsDuration("TEST_DURATION", 1*time.Minute)
-	assert.Equal(t, 1*time.Minute, duration)
+	os.Setenv("TEST_INVALID_DURATION", "not-a-duration")
+	defer os.Unsetenv("TEST_INVALID_DURATION")
 
-	os.Clearenv()
-}
+	value = getEnvAsDuration("TEST_INVALID_DURATION", time.Hour)
+	assert.Equal(t, time.Hour, value)
 
-func TestGetEnvAsInt(t *testing.T) {
-	os.Setenv("TEST_INT", "42")
-	value := getEnvAsInt("TEST_INT", 10)
-	assert.Equal(t, 42, value)
-
-	os.Setenv("TEST_INT", "invalid")
-	value = getEnvAsInt("TEST_INT", 10)
-	assert.Equal(t, 10, value)
-
-	os.Unsetenv("TEST_INT")
-	value = getEnvAsInt("TEST_INT", 10)
-	assert.Equal(t, 10, value)
-
-	os.Clearenv()
+	value = getEnvAsDuration("NON_EXISTENT_DURATION", 2*time.Hour)
+	assert.Equal(t, 2*time.Hour, value)
 }

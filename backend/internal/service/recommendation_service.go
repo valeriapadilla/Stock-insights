@@ -306,7 +306,6 @@ func (s *RecommendationService) getTargetChangeScore(targetFrom, targetTo string
 	}
 }
 
-// getFreshnessScore returns score based on how recent the data is (0-15 points)
 func (s *RecommendationService) getFreshnessScore(stockTime time.Time) int {
 	daysSince := int(time.Since(stockTime).Hours() / 24)
 

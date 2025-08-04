@@ -1,10 +1,12 @@
 # Stock Insights Backend
 
+A high-performance stock insights system that provides real-time stock data and recommendations. Built with Go, featuring a robust architecture with automatic data ingestion, recommendation algorithms, and comprehensive testing.
+
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Go 1.22+
-- PostgreSQL/CockroachDB
+- CockroachDB
 - Environment variables configured
 
 ### Installation
@@ -14,12 +16,47 @@ make deps
 
 # Build the application
 make build
+
+# Run tests
+make test
 ```
 
-## 📦 Components
+## 📦 Architecture Overview
+
+```
+AGRGAR FOTO
+```
+
+## 🎯 Core Features
+
+### **Data Ingestion**
+- ✅ Automatic daily stock data ingestion from external API
+- ✅ Manual ingestion trigger via admin API
+- ✅ Efficient incremental updates (only new data)
+- ✅ Job tracking and monitoring
+
+### **Stock Recommendations**
+- ✅ Recommendation algorithm (0-100 scoring)
+- ✅ Daily automatic recommendation calculation
+- ✅ Manual recommendation trigger via admin API
+- ✅ Data freshness validation
+
+### **Public API**
+- ✅ Stock listing with advanced filtering and pagination
+- ✅ Individual stock details
+- ✅ Stock search functionality
+- ✅ Daily recommendations with scoring
+
+### **Admin API**
+- ✅ Manual data ingestion trigger
+- ✅ Manual recommendation calculation
+- ✅ Job status tracking
+- ✅ System health monitoring
+
+## 🔧 Components
 
 ### 1. API Server
-The main API server that handles HTTP requests.
+The main API server handling HTTP requests with authentication and rate limiting.
 
 ```bash
 # Run API server
@@ -29,99 +66,131 @@ make run-api
 go run cmd/api/main.go
 ```
 
-**Endpoints:**
-- `POST /api/admin/ingest` - Manual ingestion trigger
-- `GET /api/admin/jobs/:jobId` - Job status tracking
-- `GET /health` - Health check
-
-### 2. Scheduled Worker
-Automatically runs ingestion every 24 hours.
+### 2. Data Ingestion Worker
+Automatically runs stock data ingestion every 24 hours.
 
 ```bash
-# Run scheduler worker
+# Run ingestion worker
 make run-scheduler
 
 # Or directly
 go run cmd/worker/scheduler/main.go
 ```
 
-**Features:**
-- ✅ Runs every 24 hours automatically
-- ✅ Uses JobManager for tracking
-- ✅ Graceful shutdown handling
-- ✅ Error handling and retries
+### 3. Recommendation Worker
+Calculates daily stock recommendations based on scoring algorithm.
 
-## 🔄 Architecture
+```bash
+# Run recommendation worker
+make run-recommendations
 
-### Manual Ingestion
-```
-POST /api/admin/ingest
-    ↓
-JobManager.CreateJob()
-    ↓
-JobManager.RunJobAsync()
-    ↓
-TriggerIngestionAsync()
-    ↓
-FetchAndProcessStocks()
+# Or directly
+go run cmd/worker/recommendations/main.go
 ```
 
-### Scheduled Ingestion
+## 📡 API Endpoints
+
+### Public Endpoints
+
+#### **Stocks**
+```bash
+# List stocks with pagination and filters
+GET /api/v1/public/stocks?limit=10&offset=0&sort=time&order=desc
+
+# Get specific stock
+GET /api/v1/public/stocks/{ticker}
+
+# Search stocks with filters
+GET /api/v1/public/stocks/search?ticket=AAPL&date_from=2025-01-01
 ```
-Scheduler (24h)
-    ↓
-JobManager.CreateJob()
-    ↓
-JobManager.RunJobAsync()
-    ↓
-TriggerIngestionAsync()
-    ↓
-FetchAndProcessStocks()
+
+#### **Recommendations**
+```bash
+# Get daily recommendations
+GET /api/v1/public/recommendations?limit=10
 ```
+
+#### **Health Check**
+```bash
+# System health
+GET /health
+GET /api/v1/public/health
+```
+
+### Admin Endpoints (Require Authentication)
+
+#### **Data Ingestion**
+```bash
+# Trigger manual ingestion
+POST /api/v1/admin/ingest/stocks
+Authorization: Bearer <admin_token>
+
+# Check job status
+GET /api/v1/admin/jobs/{jobId}
+Authorization: Bearer <admin_token>
+```
+
+#### **Recommendations**
+```bash
+# Calculate recommendations manually
+POST /api/v1/admin/recommendations/calculate
+Authorization: Bearer <admin_token>
+```
+
+## 🧠 Recommendation Algorithm
+
+The system uses a sophisticated scoring algorithm (0-100 points):
+
+### **Scoring Components**
+- **Action Score (0-40)**: Based on analyst actions (target raised/lowered)
+- **Rating Score (0-25)**: Based on analyst ratings (Buy, Overweight, etc.)
+- **Target Change Score (0-20)**: Based on percentage change in target price
+- **Freshness Score (0-15)**: Based on data recency
+
+### **Filtering Process**
+1. **Freshness Filter**: Only stocks from last 7 days
+2. **Positive Action Filter**: Only stocks with positive analyst actions >80
+3. **Positive Rating Filter**: Only stocks with positive ratings
+4. **Significant Change Filter**: Only stocks with significant target changes
 
 ## 🛠️ Development
 
-### Run Both Services
-```bash
-# Terminal 1: API Server
-make run-api
-
-# Terminal 2: Scheduler
-make run-scheduler
+### Project Structure
 ```
-
-### Build for Production
-```bash
-make build-prod
+backend/
+├── cmd/                    # Application entry points
+│   ├── api/               # API server
+│   ├── worker/            # Workers (ingestion, recommendations)
+│   ├── migrate/           # Database migrations
+│   └── setup-auth/        # Setup authentication for admin
+├── internal/              # Internal packages
+│   ├── app/               # Application setup
+│   ├── bootstrap/         # Bootstrap configuration
+│   ├── client/            # External API client
+│   ├── config/            # Configuration management
+│   ├── database/          # Database connection and migrations
+│   ├── dto/               # Data Transfer Objects
+│   ├── errors/            # Custom error types
+│   ├── handler/           # HTTP handlers
+│   ├── job/               # Job management
+│   ├── middleware/        # HTTP middleware
+│   ├── model/             # Data models
+│   ├── repository/        # Data access layer
+│   ├── server/            # Server setup
+│   ├── service/           # Business logic
+│   ├── validator/         # Input validation
+│   └── worker/            # Background workers
+├── scripts/               # Utility scripts
+├── docs/                  # Documentation
+├── Dockerfile             # Docker configuration
+└── Makefile               # Build and development commands
 ```
-
-### Testing
-```bash
-make test
-```
-
-## 📊 Job Tracking
-
-All jobs (manual and scheduled) are tracked through the JobManager:
-
-```bash
-# Check job status
-curl -X GET http://localhost:8080/api/admin/jobs/{jobId} \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-**Job States:**
-- `pending` - Job created, waiting to start
-- `running` - Job currently executing
-- `completed` - Job finished successfully
-- `failed` - Job failed with error
-
 ## 🔧 Configuration
 
 ### Environment Variables
 ```bash
 # Database
-DATABASE_URL=postgresql://...
+DATABASE_URL=postgresql://user:password@host:port/database
 
 # External API
 EXTERNAL_API_URL=https://api.karenai.click
@@ -130,23 +199,37 @@ EXTERNAL_API_KEY=your_api_key
 # Server
 PORT=8080
 ENVIRONMENT=development
+LOG_LEVEL=info
+
+# Admin Authentication
+ADMIN_API_KEY=your_admin_key
+
+# Rate Limiting
+RATE_LIMIT=100
+
+# Caching
+CACHE_TTL=5m
 ```
 
-## 📈 Monitoring
+## 📊 Job Tracking
 
-### Logs
-Both services log to stdout with structured logging:
-- API Server: HTTP requests, job creation
-- Scheduler: Scheduled runs, job tracking
+All jobs (manual and scheduled) are tracked through the JobManager:
 
-### Health Checks
+### Job States
+- `pending` - Job created, waiting to start
+- `running` - Job currently executing
+- `completed` - Job finished successfully
+- `failed` - Job failed with error
+
+### Job Monitoring
 ```bash
-curl http://localhost:8080/health
+# Check job status
+curl -X GET http://localhost:8080/api/v1/admin/jobs/{jobId} \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
-
 ## 🚀 Deployment
 
-### Docker
+### Docker Deployment
 ```bash
 # Build image
 docker build -t stock-insights .
@@ -154,47 +237,29 @@ docker build -t stock-insights .
 # Run API server
 docker run -p 8080:8080 stock-insights
 
-# Run scheduler (separate container)
+# Run workers (separate containers)
 docker run stock-insights ./bin/scheduler
+docker run stock-insights ./bin/recommendations
 ```
 
-### Production
-```bash
-# Build production binaries
-make build-prod
+### GitHub Actions Scheduling
+The system uses GitHub Actions for scheduled workers:
 
-# Run with process manager (systemd, supervisor, etc.)
-./bin/api     # API server
-./bin/scheduler # Scheduler worker
-```
+- **Ingestion Worker**: Runs daily at 4:00 AM Colombia time
+- **Recommendation Worker**: Runs daily at 4:30 AM Colombia time
 
-## 🔍 Troubleshooting
+### Performance Optimization
+- Database queries are optimized with proper indexing
+- Incremental data ingestion (only new data)
+- Efficient recommendation calculation with filtering
+- Rate limiting to prevent abuse
 
-### Common Issues
+## 🧪 Testing Coverage
 
-1. **Database Connection**
-   ```bash
-   # Check DATABASE_URL
-   echo $DATABASE_URL
-   ```
+The project maintains comprehensive test coverage:
 
-2. **External API**
-   ```bash
-   # Check API key
-   echo $EXTERNAL_API_KEY
-   ```
-
-3. **Job Failures**
-   ```bash
-   # Check job status
-   curl -X GET http://localhost:8080/api/admin/jobs/{jobId}
-   ```
-
-### Logs
-```bash
-# API server logs
-tail -f logs/api.log
-
-# Scheduler logs  
-tail -f logs/scheduler.log
-``` 
+- **Service Layer**: 68.8% coverage
+- **Handler Layer**: 81.7% coverage
+- **Validator Layer**: 96.6% coverage
+- **Client Layer**: 91.4% coverage
+- **Config Layer**: 80.0% coverage

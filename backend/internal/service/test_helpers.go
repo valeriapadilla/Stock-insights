@@ -9,7 +9,6 @@ import (
 	repoInterfaces "github.com/valeriapadilla/stock-insights/internal/repository/interfaces"
 )
 
-// Mock implementations
 type MockStockRepository struct {
 	mock.Mock
 }

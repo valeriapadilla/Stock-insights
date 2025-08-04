@@ -13,17 +13,18 @@ import (
 	"github.com/valeriapadilla/stock-insights/internal/middleware"
 	"github.com/valeriapadilla/stock-insights/internal/repository"
 	"github.com/valeriapadilla/stock-insights/internal/service"
+	"github.com/valeriapadilla/stock-insights/internal/service/interfaces"
 )
 
 type Server struct {
 	router           *gin.Engine
 	config           *config.Config
-	ingestionService *service.IngestionService
-	jobManager       *job.JobManager
+	ingestionService interfaces.IngestionServiceInterface
+	jobManager       job.JobManagerInterface
 	logger           *logrus.Logger
 }
 
-func NewServer(cfg *config.Config, ingestionService *service.IngestionService, logger *logrus.Logger) *Server {
+func NewServer(cfg *config.Config, ingestionService interfaces.IngestionServiceInterface, logger *logrus.Logger) *Server {
 	server := &Server{
 		config:           cfg,
 		router:           gin.New(),

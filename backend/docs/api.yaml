@@ -1,0 +1,782 @@
+openapi: 3.0.3
+info:
+  title: Stock Insights API
+  description: |
+    High-performance stock insights system that provides real-time stock data and recommendations.
+    
+    ## Features
+    - Real-time stock data from external APIs
+    - Recommendation algorithm
+    - Automatic daily data ingestion
+    - Advanced filtering and search capabilities
+    - Job tracking and monitoring
+    
+    ## Authentication
+    - Public endpoints: No authentication required
+    - Admin endpoints: Bearer token authentication required
+    
+    ## Rate Limiting
+    - Public endpoints: 100 requests per minute per IP
+    - Admin endpoints: 50 requests per minute per IP
+  version: 1.0.0
+  contact:
+    name: Stock Insights Team
+    email: support@stock-insights.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: htts://stock-insights-production.up.railway.app
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Health Check Endpoints
+  /health:
+    get:
+      summary: Basic health check
+      description: Returns basic system health status
+      tags:
+        - Health
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-08-03T17:52:39-05:00"
+        '500':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/public/health:
+    get:
+      summary: Public health check
+      description: Returns detailed system health status for public API
+      tags:
+        - Health
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2025-08-03T17:52:39-05:00"
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  # Stock Endpoints
+  /api/v1/public/stocks:
+    get:
+      summary: List stocks
+      description: |
+        Retrieve a paginated list of stocks with optional filtering and sorting.
+        
+        ## Filters Available
+        - `date_from`: Filter stocks from specific date (YYYY-MM-DD)
+        - `date_to`: Filter stocks to specific date (YYYY-MM-DD)
+        - `ticket`: Filter by stock ticker
+        - `rating`: Filter by analyst rating (Buy, Sell, Hold, etc.)
+        - `action`: Filter by analyst action (target raised, target lowered, etc.)
+        - `brokerage`: Filter by brokerage firm
+        
+        ## Sorting Options
+        - `sort`: time, ticker, company, rating, action
+        - `order`: asc, desc
+      tags:
+        - Stocks
+      parameters:
+        - name: limit
+          in: query
+          description: Number of stocks to return (max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: offset
+          in: query
+          description: Number of stocks to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: sort
+          in: query
+          description: Field to sort by
+          required: false
+          schema:
+            type: string
+            enum: [time, ticker, company, rating, action]
+            default: time
+        - name: order
+          in: query
+          description: Sort order
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: date_from
+          in: query
+          description: Filter stocks from date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          description: Filter stocks to date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: ticket
+          in: query
+          description: Filter by stock ticker
+          required: false
+          schema:
+            type: string
+        - name: rating
+          in: query
+          description: Filter by analyst rating
+          required: false
+          schema:
+            type: string
+        - name: action
+          in: query
+          description: Filter by analyst action
+          required: false
+          schema:
+            type: string
+        - name: brokerage
+          in: query
+          description: Filter by brokerage firm
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of stocks retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stocks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Stock'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/public/stocks/{ticker}:
+    get:
+      summary: Get stock by ticker
+      description: Retrieve detailed information about a specific stock
+      tags:
+        - Stocks
+      parameters:
+        - name: ticker
+          in: path
+          description: Stock ticker symbol
+          required: true
+          schema:
+            type: string
+            example: "AAPL"
+      responses:
+        '200':
+          description: Stock details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stock:
+                    $ref: '#/components/schemas/Stock'
+        '404':
+          description: Stock not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/public/stocks/search:
+    get:
+      summary: Search stocks
+      description: |
+        Search stocks with advanced filtering capabilities.
+        This endpoint provides more flexible search options than the basic list endpoint.
+      tags:
+        - Stocks
+      parameters:
+        - name: limit
+          in: query
+          description: Number of stocks to return (max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: offset
+          in: query
+          description: Number of stocks to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: date_from
+          in: query
+          description: Filter stocks from date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          description: Filter stocks to date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: ticket
+          in: query
+          description: Filter by stock ticker
+          required: false
+          schema:
+            type: string
+        - name: min_price
+          in: query
+          description: Minimum target price
+          required: false
+          schema:
+            type: number
+        - name: max_price
+          in: query
+          description: Maximum target price
+          required: false
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Search results retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stocks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Stock'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+                  filters_applied:
+                    $ref: '#/components/schemas/SearchFilters'
+        '400':
+          description: Invalid search parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Recommendation Endpoints
+  /api/v1/public/recommendations:
+    get:
+      summary: Get daily recommendations
+      description: |
+        Retrieve the latest daily stock recommendations calculated by the AI algorithm.
+        
+        ## Scoring Algorithm
+        The recommendations use a sophisticated 0-100 point scoring system:
+        - **Action Score (0-40)**: Based on analyst actions (target raised/lowered)
+        - **Rating Score (0-25)**: Based on analyst ratings (Buy, Overweight, etc.)
+        - **Target Change Score (0-20)**: Based on percentage change in target price
+        - **Freshness Score (0-15)**: Based on data recency
+      tags:
+        - Recommendations
+      parameters:
+        - name: limit
+          in: query
+          description: Number of recommendations to return (max 100)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Recommendations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recommendation'
+                  total:
+                    type: integer
+                    description: Total number of recommendations available
+                  run_at:
+                    type: string
+                    format: date-time
+                    description: When the recommendations were calculated
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Admin Endpoints
+  /api/v1/admin/ingest/stocks:
+    post:
+      summary: Trigger manual data ingestion
+      description: |
+        Manually trigger the stock data ingestion process.
+        This will fetch new data from the external API and update the database.
+        
+        The ingestion process runs asynchronously and returns a job ID for tracking.
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+      responses:
+        '202':
+          description: Ingestion job started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ingestion job started"
+                  job_id:
+                    type: string
+                    format: uuid
+                    example: "cc31797d-b9bc-4898-9cb4-3fef1f9beec0"
+                  status:
+                    type: string
+                    example: "accepted"
+                  job:
+                    $ref: '#/components/schemas/Job'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/admin/jobs/{jobId}:
+    get:
+      summary: Get job status
+      description: |
+        Retrieve the current status of a background job (ingestion, recommendations, etc.).
+        
+        ## Job States
+        - `pending`: Job created, waiting to start
+        - `running`: Job currently executing
+        - `completed`: Job finished successfully
+        - `failed`: Job failed with error
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          description: Job ID
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "cc31797d-b9bc-4898-9cb4-3fef1f9beec0"
+      responses:
+        '200':
+          description: Job status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/admin/recommendations/calculate:
+    post:
+      summary: Calculate recommendations manually
+      description: |
+        Manually trigger the recommendation calculation process.
+        This will recalculate all stock recommendations using the AI algorithm.
+        
+        The calculation process:
+        1. Validates data freshness (must be within 24 hours)
+        2. Fetches stocks from the last 7 days
+        3. Applies filtering criteria (positive actions, ratings, significant changes)
+        4. Calculates scores using the recommendation algorithm
+        5. Saves the top recommendations to the database
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Recommendations calculated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recommendations calculated and saved successfully"
+                  recommendations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recommendation'
+                  total:
+                    type: integer
+                    description: Total number of recommendations calculated
+                  run_at:
+                    type: string
+                    format: date-time
+                    description: When the recommendations were calculated
+        '401':
+          description: Unauthorized - Invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+# Components
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token for admin authentication.
+        Include the token in the Authorization header as "Bearer <token>"
+
+  schemas:
+    Stock:
+      type: object
+      properties:
+        ticker:
+          type: string
+          description: Stock ticker symbol
+          example: "AAPL"
+        company:
+          type: string
+          description: Company name
+          example: "Apple Inc"
+        target_from:
+          type: string
+          description: Previous target price
+          example: "$150.00"
+        target_to:
+          type: string
+          description: New target price
+          example: "$200.00"
+        rating_from:
+          type: string
+          description: Previous analyst rating
+          example: "Hold"
+        rating_to:
+          type: string
+          description: New analyst rating
+          example: "Buy"
+        action:
+          type: string
+          description: Analyst action taken
+          example: "target raised by"
+        brokerage:
+          type: string
+          description: Brokerage firm name
+          example: "Morgan Stanley"
+        time:
+          type: string
+          format: date-time
+          description: When the data was recorded
+          example: "2025-08-03T00:00:07.750467Z"
+        created_at:
+          type: string
+          format: date-time
+          description: When the record was created in our system
+          example: "2025-08-03T00:05:27.411369Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the record was last updated
+          example: "2025-08-03T00:05:27.411369Z"
+      required:
+        - ticker
+        - company
+        - target_from
+        - target_to
+        - rating_from
+        - rating_to
+        - action
+        - brokerage
+        - time
+
+    Recommendation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique recommendation ID
+          example: "43c984c3-2f14-43e5-a2a0-4fcef7d5095f"
+        ticker:
+          type: string
+          description: Stock ticker symbol
+          example: "AAPL"
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: AI algorithm score (0-100)
+          example: 95
+        explanation:
+          type: string
+          description: Human-readable explanation of the recommendation
+          example: "Target price raised, Buy rating, Target raised by 33.3%, by Morgan Stanley, Score: 95/100"
+        rank:
+          type: integer
+          minimum: 1
+          description: Ranking position among all recommendations
+          example: 1
+        run_at:
+          type: string
+          format: date-time
+          description: When this recommendation was calculated
+          example: "2025-08-03T01:22:32.941135Z"
+      required:
+        - id
+        - ticker
+        - score
+        - explanation
+        - rank
+        - run_at
+
+    Pagination:
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: Number of items per page
+          example: 10
+        offset:
+          type: integer
+          description: Number of items skipped
+          example: 0
+        total:
+          type: integer
+          description: Total number of items available
+          example: 2768
+        has_next:
+          type: boolean
+          description: Whether there are more items available
+          example: true
+
+    SearchFilters:
+      type: object
+      properties:
+        date_from:
+          type: string
+          format: date
+          description: Start date filter applied
+          example: "2025-01-01"
+        date_to:
+          type: string
+          format: date
+          description: End date filter applied
+          example: "2025-08-03"
+        max_price:
+          type: number
+          description: Maximum price filter applied
+          example: 100.0
+        min_price:
+          type: number
+          description: Minimum price filter applied
+          example: 10.0
+        ticket:
+          type: string
+          description: Ticker filter applied
+          example: "AAPL"
+
+    Job:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique job ID
+          example: "cc31797d-b9bc-4898-9cb4-3fef1f9beec0"
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+          description: Current job status
+          example: "running"
+        created_at:
+          type: string
+          format: date-time
+          description: When the job was created
+          example: "2025-08-03T07:16:29.2214745-05:00"
+        started_at:
+          type: string
+          format: date-time
+          description: When the job started executing
+          example: "2025-08-03T07:16:29.2215207-05:00"
+        completed_at:
+          type: string
+          format: date-time
+          description: When the job completed (if finished)
+          example: "2025-08-03T07:16:35.1234567-05:00"
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Job progress percentage
+          example: 75
+        message:
+          type: string
+          description: Current job status message
+          example: "Processing stocks..."
+        error:
+          type: string
+          description: Error message if job failed
+          example: "External API timeout"
+      required:
+        - id
+        - status
+        - created_at
+        - progress
+        - message
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Unauthorized"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid or expired authentication token"
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+      required:
+        - error
+        - message
+
+tags:
+  - name: Health
+    description: System health check endpoints
+  - name: Stocks
+    description: Stock data endpoints
+  - name: Recommendations
+    description: Stock recommendation endpoints
+  - name: Admin
+    description: Administrative endpoints (requires authentication) 

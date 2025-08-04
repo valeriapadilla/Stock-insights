@@ -25,6 +25,8 @@ func NewJobManager(maxWorkers int, logger *logrus.Logger) *JobManager {
 	}
 }
 
+var _ JobManagerInterface = (*JobManager)(nil)
+
 func (jm *JobManager) CreateJob() (*Job, error) {
 	job := &Job{
 		ID:        uuid.New().String(),
