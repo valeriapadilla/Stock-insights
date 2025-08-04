@@ -21,17 +21,26 @@ jobs:
         with:
           go-version: '1.21'
 
+      - name: Install dependencies
+        run: |
+          cd backend
+          make deps
+
       - name: Run Backend Tests
         env:
           DATABASE_URL_TEST: ${{ secrets.DATABASE_URL_TEST }}
         run: |
           cd backend
-          make test
+          echo "Running tests..."
+          make test-verbose
+          echo "Tests completed!"
 
       - name: Build Backend
         run: |
           cd backend
+          echo "Building application..."
           make build
+          echo "Build completed!"
 
       - name: Deploy to Railway
         if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
