@@ -52,10 +52,7 @@ curl http://localhost:8080/api/v1/public/health
 ```
 
 ## 📦 Architecture Overview
-
-```
-AGRGAR FOTO
-```
+![](https://github.com/user-attachments/assets/83da7991-8b98-4e72-8cab-5995eae502bb)
 
 ## 🎯 Core Features
 
@@ -179,7 +176,7 @@ backend/
 ├── docs/                  # Documentation
 ├── Dockerfile             # Docker configuration
 └── Makefile               # Build and development 
-
+```
 commands
 ```## 🔧 Configuration
 
@@ -205,7 +202,7 @@ RATE_LIMIT=100
 
 # Caching
 CACHE_TTL=5m
-```
+
 
 ## 📊 Job Tracking
 
@@ -240,8 +237,8 @@ docker run stock-insights ./bin/recommendations
 ### GitHub Actions Scheduling
 The system uses GitHub Actions for scheduled workers:
 
-- **Ingestion Worker**: Runs daily at 4:00 AM Colombia time
-- **Recommendation Worker**: Runs daily at 4:30 AM Colombia time
+- **Ingestion Worker**: Runs daily at 1:00 AM UTC (8:00 PM Colombia time)
+- **Recommendation Worker**: Runs daily at 1:08 AM (8:08 PM Colombia time)
 
 ### Performance Optimization
 - Database queries are optimized with proper indexing
