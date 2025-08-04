@@ -11,7 +11,12 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/api
 
 FROM alpine:latest
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates wget
+
+RUN apk add --no-cache openssl
+
+RUN mkdir -p /etc/ssl/certs && \
+    wget -O /etc/ssl/certs/root.crt https://cockroachlabs.cloud/clusters/cab4838a-cea9-4ecb-bff2-ed32d0f794be/cert
 
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
