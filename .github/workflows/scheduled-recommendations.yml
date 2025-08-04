@@ -2,7 +2,7 @@ name: Scheduled Recommendations
 
 on:
   schedule:
-    - cron: '30 17 * * *'  
+    - cron: '8 1 * * *'  # 1:08 AM UTC 
   workflow_dispatch: 
 
 jobs:
@@ -18,10 +18,15 @@ jobs:
       with:
         go-version: '1.21'
         
+    - name: Install dependencies
+      run: |
+        cd backend
+        go mod download
+        
     - name: Build recommendation worker
       run: |
         cd backend
-        go build -o recommendation-worker ./cmd/worker/recommendations/
+        go build -o recommendation-worker ./cmd/worker/recommendations/main.go
         
     - name: Run recommendations
       env:

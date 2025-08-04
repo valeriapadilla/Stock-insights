@@ -10,15 +10,45 @@ A high-performance stock insights system that provides real-time stock data and 
 - Environment variables configured
 
 ### Installation
+
+## 🛠️ Local Development Setup
+
+### **1. Clone and Setup**
 ```bash
-# Install dependencies
-make deps
+git clone https://github.com/valeriapadilla/Stock-insights.git
+cd backend
+make setup
+```
 
-# Build the application
-make build
+### **2. Start Your Database**
+```bash
+# Install CockroachDB
+# macOS: brew install cockroachdb/tap/cockroach
+# Linux: Follow instructions at https://www.cockroachlabs.com/docs/stable/install-cockroachdb-linux.html
 
-# Run tests
-make test
+# Start database
+cockroach start-single-node --insecure
+
+# Create database (in new terminal)
+cockroach sql --insecure -e "CREATE DATABASE stock_insights;"
+```
+
+### **3. Configure Environment**
+Edit the `.env` file created by `make setup`:
+```bash
+# Update these values in .env:
+DATABASE_URL="postgresql://username:password@localhost:26257/stock_insights?sslmode=disable"
+EXTERNAL_API_KEY="your_actual_api_key_here"
+```
+
+### **4. Run the Application**
+```bash
+make run-api
+```
+
+**Test the setup:**
+```bash
+curl http://localhost:8080/api/v1/public/health
 ```
 
 ## 📦 Architecture Overview
@@ -52,41 +82,6 @@ AGRGAR FOTO
 - ✅ Manual recommendation calculation
 - ✅ Job status tracking
 - ✅ System health monitoring
-
-## 🔧 Components
-
-### 1. API Server
-The main API server handling HTTP requests with authentication and rate limiting.
-
-```bash
-# Run API server
-make run-api
-
-# Or directly
-go run cmd/api/main.go
-```
-
-### 2. Data Ingestion Worker
-Automatically runs stock data ingestion every 24 hours.
-
-```bash
-# Run ingestion worker
-make run-scheduler
-
-# Or directly
-go run cmd/worker/scheduler/main.go
-```
-
-### 3. Recommendation Worker
-Calculates daily stock recommendations based on scoring algorithm.
-
-```bash
-# Run recommendation worker
-make run-recommendations
-
-# Or directly
-go run cmd/worker/recommendations/main.go
-```
 
 ## 📡 API Endpoints
 
@@ -183,9 +178,10 @@ backend/
 ├── scripts/               # Utility scripts
 ├── docs/                  # Documentation
 ├── Dockerfile             # Docker configuration
-└── Makefile               # Build and development commands
-```
-## 🔧 Configuration
+└── Makefile               # Build and development 
+
+commands
+```## 🔧 Configuration
 
 ### Environment Variables
 ```bash
@@ -241,7 +237,6 @@ docker run -p 8080:8080 stock-insights
 docker run stock-insights ./bin/scheduler
 docker run stock-insights ./bin/recommendations
 ```
-
 ### GitHub Actions Scheduling
 The system uses GitHub Actions for scheduled workers:
 
@@ -263,3 +258,4 @@ The project maintains comprehensive test coverage:
 - **Validator Layer**: 96.6% coverage
 - **Client Layer**: 91.4% coverage
 - **Config Layer**: 80.0% coverage
+

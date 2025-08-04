@@ -2,7 +2,7 @@ name: Scheduled Stock Ingestion
 
 on:
   schedule:
-    - cron: '0 17 * * *'  
+    - cron: '0 1 * * *'  # 1:00 AM UTC 
   workflow_dispatch: 
 
 jobs:
@@ -18,10 +18,15 @@ jobs:
       with:
         go-version: '1.21'
         
+    - name: Install dependencies
+      run: |
+        cd backend
+        go mod download
+        
     - name: Build ingestion worker
       run: |
         cd backend
-        go build -o ingestion-worker ./cmd/worker/scheduler/
+        go build -o ingestion-worker ./cmd/worker/scheduler/main.go
         
     - name: Run ingestion
       env:
