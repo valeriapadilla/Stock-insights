@@ -41,7 +41,7 @@
             
             <div v-else class="grid gap-4">
               <StockCard 
-                v-for="stock in stocksStore.filteredStocks" 
+                v-for="stock in stocksStore.stocks" 
                 :key="stock.ticker"
                 :stock="stock"
               />
@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useStocksStore } from '../stores/stocks'
 import { useRecommendationsStore } from '../stores/recommendations'
 import Header from '../components/common/Header.vue'
@@ -112,8 +112,8 @@ const activeTab = ref<'stocks' | 'recommendations'>('stocks')
 const stockFilters = ref({
   search: '',
   rating: '',
-  action: '',
-  priceRange: ''
+  sort_by: 'ticker_asc',
+  order: 'asc' as 'asc' | 'desc'
 })
 
 const handleTabChange = (tab: 'stocks' | 'recommendations') => {
@@ -131,21 +131,25 @@ const handleStockSearch = (query: string) => {
 }
 
 const loadStocks = async () => {
-  await stocksStore.loadStocks({
+  await stocksStore.searchStocks({
+    ticket: stockFilters.value.search,
+    rating: stockFilters.value.rating,
+    sort_by: stockFilters.value.sort_by,
+    order: stockFilters.value.order,
     limit: 20,
-    offset: 0,
-    sort: 'time',
-    order: 'desc'
+    offset: 0
   })
 }
 
 const loadMoreStocks = async () => {
   const currentOffset = stocksStore.pagination.offset
-  await stocksStore.loadStocks({
+  await stocksStore.searchStocks({
+    ticket: stockFilters.value.search,
+    rating: stockFilters.value.rating,
+    sort_by: stockFilters.value.sort_by,
+    order: stockFilters.value.order,
     limit: 20,
-    offset: currentOffset + stocksStore.pagination.limit,
-    sort: 'time',
-    order: 'desc'
+    offset: currentOffset + stocksStore.pagination.limit
   })
 }
 
@@ -154,6 +158,12 @@ const loadRecommendations = async () => {
     limit: 30
   })
 }
+
+watch(stockFilters, () => {
+  if (activeTab.value === 'stocks') {
+    loadStocks()
+  }
+}, { deep: true })
 
 onMounted(() => {
   loadStocks()

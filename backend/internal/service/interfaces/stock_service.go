@@ -6,6 +6,7 @@ import (
 
 type StockSearchParams struct {
 	Ticket   string   `json:"ticket"`
+	Rating   string   `json:"rating"`
 	DateFrom string   `json:"date_from"`
 	DateTo   string   `json:"date_to"`
 	MinPrice *float64 `json:"min_price"`

@@ -5,30 +5,30 @@ import type {
   StocksSearchResponse,
   Stock 
 } from '../types/api'
+import { parseSortValue } from '../utils/sort'
 
 export interface StocksParams {
   limit?: number
   offset?: number
-  sort?: string
+  sort_by?: string
   order?: 'asc' | 'desc'
 }
 
 export interface StocksSearchParams {
   ticket?: string
-  date_from?: string
-  date_to?: string
-  min_price?: number
-  max_price?: number
+  rating?: string
+  sort_by?: string
+  order?: 'asc' | 'desc'
   limit?: number
   offset?: number
 }
 
 export class StocksService {
   static async getStocks(params: StocksParams = {}): Promise<StocksResponse> {
-    const { limit = 50, offset = 0, sort = 'time', order = 'desc' } = params
+    const { limit = 50, offset = 0, sort_by = 'time', order = 'desc' } = params
     
     const response = await apiClient.get('/stocks', {
-      params: { limit, offset, sort, order }
+      params: { limit, offset, sort_by, order }
     })
     
     return response.data
@@ -42,21 +42,20 @@ export class StocksService {
   static async searchStocks(params: StocksSearchParams = {}): Promise<StocksSearchResponse> {
     const { 
       ticket, 
-      date_from, 
-      date_to, 
-      min_price, 
-      max_price, 
+      rating,
+      sort_by,
       limit = 50, 
       offset = 0 
     } = params
     
+    const sortParams = sort_by ? parseSortValue(sort_by) : { sort_by: 'time', order: 'desc' }
+    
     const response = await apiClient.get('/stocks/search', {
       params: { 
         ticket, 
-        date_from, 
-        date_to, 
-        min_price, 
-        max_price, 
+        rating,
+        sort_by: sortParams.sort_by,
+        order: sortParams.order,
         limit, 
         offset 
       }
@@ -68,18 +67,6 @@ export class StocksService {
   static async getStocksCount(): Promise<number> {
     const response = await apiClient.get('/stocks', {
       params: { limit: 1, offset: 0 }
-    })
-    
-    return response.data.pagination.total
-  }
-
-  static async getStocksByAction(action: string): Promise<number> {
-    const response = await apiClient.get('/stocks', {
-      params: { 
-        action,
-        limit: 1, 
-        offset: 0 
-      }
     })
     
     return response.data.pagination.total
