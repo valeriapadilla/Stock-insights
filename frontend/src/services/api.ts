@@ -13,7 +13,6 @@ const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    // Aquí podemos agregar headers de autenticación si es necesario
     console.log(`Making request to: ${config.url}`)
     return config
   },

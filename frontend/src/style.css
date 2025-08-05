@@ -1,19 +1,17 @@
 @import "tailwindcss";
 
-/* Configuración del tema oscuro para StockInsights */
 :root {
-  --color-primary: #10b981; /* Verde */
-  --color-secondary: #6b7280; /* Gris */
-  --color-background: #111827; /* Gris muy oscuro */
-  --color-surface: #1f2937; /* Gris oscuro */
-  --color-text: #f9fafb; /* Blanco */
-  --color-text-secondary: #9ca3af; /* Gris claro */
-  --color-error: #ef4444; /* Rojo */
-  --color-success: #10b981; /* Verde */
-  --color-warning: #f59e0b; /* Amarillo */
+  --color-primary: #10b981; 
+  --color-secondary: #6b7280; 
+  --color-background: #111827; 
+  --color-surface: #1f2937; 
+  --color-text: #f9fafb;
+  --color-text-secondary: #9ca3af;
+  --color-error: #ef4444; 
+  --color-success: #10b981; 
+  --color-warning: #f59e0b; 
 }
 
-/* Estilos base */
 body {
   margin: 0;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -27,7 +25,6 @@ body {
   min-height: 100vh;
 }
 
-/* Componentes personalizados */
 .btn-primary {
   @apply bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors;
 }

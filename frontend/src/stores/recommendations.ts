@@ -38,12 +38,14 @@ export const useRecommendationsStore = defineStore('recommendations', {
   },
 
   actions: {
-    async loadRecommendations(limit: number = 30) {
+    async loadRecommendations(params: { limit?: number } = {}) {
       this.loading = true
       this.error = null
       
       try {
-        const response: RecommendationsResponse = await RecommendationsService.getRecommendations({ limit })
+        const response: RecommendationsResponse = await RecommendationsService.getRecommendations({ 
+          limit: params.limit || this.limit 
+        })
         
         this.recommendations = response.recommendations
         this.total = response.total
@@ -55,23 +57,6 @@ export const useRecommendationsStore = defineStore('recommendations', {
         this.loading = false
       }
     },
-
-    // async loadRecommendation(id: string) {
-    //   this.loading = true
-    //   this.error = null
-      
-    //   try {
-    //     const recommendation = await RecommendationsService.getRecommendation(id)
-    //     // 
-    //     return recommendation
-    //   } catch (error) {
-    //     this.error = error instanceof Error ? error.message : 'Error loading recommendation'
-    //     console.error('Error loading recommendation:', error)
-    //     throw error
-    //   } finally {
-    //     this.loading = false
-    //   }
-    // },
 
     async getRecommendationsCount(): Promise<number> {
       try {

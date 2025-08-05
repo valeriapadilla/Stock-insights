@@ -46,7 +46,34 @@ export const useStocksStore = defineStore('stocks', {
   }),
 
   getters: {
-    filteredStocks: (state) => state.stocks,
+    filteredStocks: (state) => {
+      let filtered = [...state.stocks]
+      
+      // Filter by search
+      if (state.filters.search) {
+        const searchLower = state.filters.search.toLowerCase()
+        filtered = filtered.filter(stock => 
+          stock.ticker.toLowerCase().includes(searchLower) ||
+          stock.company.toLowerCase().includes(searchLower)
+        )
+      }
+      
+      // Filter by rating
+      if (state.filters.rating) {
+        filtered = filtered.filter(stock => 
+          stock.rating_to.toLowerCase() === state.filters.rating.toLowerCase()
+        )
+      }
+      
+      // Filter by action
+      if (state.filters.action) {
+        filtered = filtered.filter(stock => 
+          stock.action.toLowerCase().includes(state.filters.action.toLowerCase())
+        )
+      }
+      
+      return filtered
+    },
     
     hasMorePages: (state) => state.pagination.has_next,
     
@@ -70,7 +97,13 @@ export const useStocksStore = defineStore('stocks', {
           order: params.order || this.filters.sortOrder
         })
         
-        this.stocks = response.stocks
+        // If offset is 0, replace stocks, otherwise append
+        if (params.offset === 0 || !params.offset) {
+          this.stocks = response.stocks
+        } else {
+          this.stocks = [...this.stocks, ...response.stocks]
+        }
+        
         this.pagination = response.pagination
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Error loading stocks'

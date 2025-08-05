@@ -1,39 +1,18 @@
 <template>
   <div class="search-bar relative">
-
-    <div class="relative">
-      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-      </div>
-      
-      <input
-        :value="modelValue"
-        @input="handleInput"
-        @keyup.enter="handleSearch"
-        type="text"
-        :placeholder="placeholder"
-        class="input-field w-full pl-10 pr-4 py-2"
-        :class="{ 'border-red-500': hasError }"
-      />
-      
-      <div class="absolute inset-y-0 right-0 flex items-center">
-        <button
-          @click="handleSearch"
-          class="px-3 py-2 text-gray-400 hover:text-gray-300 transition-colors"
-          :disabled="!modelValue.trim()"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
+    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
     </div>
-    
-    <p v-if="errorMessage" class="mt-1 text-sm text-red-400">
-      {{ errorMessage }}
-    </p>
+    <input
+      :value="modelValue"
+      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+      @keyup.enter="$emit('search', modelValue)"
+      type="text"
+      class="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md leading-5 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:placeholder-gray-500 focus:ring-1 focus:ring-green-500 focus:border-green-500"
+      :placeholder="placeholder"
+    />
   </div>
 </template>
 
@@ -41,45 +20,12 @@
 interface Props {
   modelValue: string
   placeholder?: string
-  hasError?: boolean
-  errorMessage?: string
-  debounceMs?: number
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  placeholder: 'Search by ticker or company name...',
-  hasError: false,
-  errorMessage: '',
-  debounceMs: 300
-})
+defineProps<Props>()
 
-const emit = defineEmits<{
+defineEmits<{
   'update:modelValue': [value: string]
   search: [query: string]
 }>()
-
-let debounceTimer: NodeJS.Timeout | null = null
-
-const handleInput = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const value = target.value
-  
-  emit('update:modelValue', value)
-  
-  if (debounceTimer) {
-    clearTimeout(debounceTimer)
-  }
-  
-  debounceTimer = setTimeout(() => {
-    if (value.trim()) {
-      emit('search', value.trim())
-    }
-  }, props.debounceMs)
-}
-
-const handleSearch = () => {
-  if (props.modelValue.trim()) {
-    emit('search', props.modelValue.trim())
-  }
-}
 </script> 
