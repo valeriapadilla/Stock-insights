@@ -10,6 +10,9 @@ type StockSearchParams struct {
 	DateTo   string   `json:"date_to"`
 	MinPrice *float64 `json:"min_price"`
 	MaxPrice *float64 `json:"max_price"`
+	Rating   string   `json:"rating"`
+	SortBy   string   `json:"sort_by"`
+	Order    string   `json:"order"`
 	Limit    int      `json:"limit"`
 	Offset   int      `json:"offset"`
 }

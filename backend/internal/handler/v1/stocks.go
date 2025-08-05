@@ -64,6 +64,7 @@ func (h *StocksHandler) GetStock(c *gin.Context) {
 func (h *StocksHandler) SearchStocks(c *gin.Context) {
 	limit, offset, _, _ := parsePaginationParams(c)
 	minPrice, maxPrice := parsePriceParams(c)
+	rating, sortBy, order := parseFilterParams(c)
 
 	ticket := c.Query("ticket")
 	dateFrom := c.Query("date_from")
@@ -75,6 +76,9 @@ func (h *StocksHandler) SearchStocks(c *gin.Context) {
 		DateTo:   dateTo,
 		MinPrice: minPrice,
 		MaxPrice: maxPrice,
+		Rating:   rating,
+		SortBy:   sortBy,
+		Order:    order,
 		Limit:    limit,
 		Offset:   offset,
 	})
@@ -98,6 +102,9 @@ func (h *StocksHandler) SearchStocks(c *gin.Context) {
 			"date_to":   dateTo,
 			"min_price": minPrice,
 			"max_price": maxPrice,
+			"rating":    rating,
+			"sort_by":   sortBy,
+			"order":     order,
 		},
 	})
 }

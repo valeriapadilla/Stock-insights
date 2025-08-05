@@ -1,6 +1,9 @@
 package service
 
 import (
+	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -45,6 +48,8 @@ func (s *StockService) ListStocks(limit, offset int, sort, order string) ([]*mod
 		return nil, 0, errors.NewDatabaseError("failed to retrieve stocks", err)
 	}
 
+	s.calculateChangePercentForStocks(stocks)
+
 	total, err := s.stockRepo.GetStocksCount(params)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get stocks count from repository")
@@ -68,6 +73,8 @@ func (s *StockService) GetStock(ticket string) (*model.Stock, error) {
 	if stock == nil {
 		return nil, errors.NewNotFoundError("stock not found", nil)
 	}
+
+	s.calculateChangePercentForStock(stock)
 
 	return stock, nil
 }
@@ -94,8 +101,13 @@ func (s *StockService) SearchStocks(params interfaces.StockSearchParams) ([]*mod
 		}
 	}
 
+	limitForDB := params.Limit
+	if params.Rating != "" {
+		limitForDB = params.Limit * 10
+	}
+
 	repoParams := repoInterfaces.GetStocksParams{
-		Limit:  params.Limit,
+		Limit:  limitForDB,
 		Offset: params.Offset,
 		Sort:   "time",
 		Order:  "desc",
@@ -114,11 +126,90 @@ func (s *StockService) SearchStocks(params interfaces.StockSearchParams) ([]*mod
 		return nil, 0, errors.NewDatabaseError("failed to search stocks", err)
 	}
 
+	filteredStocks := s.applyFilters(stocks, params)
+	sortedStocks := s.sortStocks(filteredStocks, params.SortBy, params.Order)
+
+	if len(sortedStocks) > params.Limit {
+		sortedStocks = sortedStocks[:params.Limit]
+	}
+
 	total, err := s.stockRepo.GetStocksCount(repoParams)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to get stocks count from repository")
 		return nil, 0, errors.NewDatabaseError("failed to get stocks count", err)
 	}
 
-	return stocks, total, nil
+	return sortedStocks, total, nil
+}
+
+func (s *StockService) applyFilters(stocks []*model.Stock, params interfaces.StockSearchParams) []*model.Stock {
+	if params.Rating == "" {
+		return stocks
+	}
+
+	filtered := make([]*model.Stock, 0)
+	ratingLower := strings.ToLower(params.Rating)
+
+	for _, stock := range stocks {
+		if stock.GetRating() == ratingLower {
+			filtered = append(filtered, stock)
+		}
+	}
+
+	return filtered
+}
+
+func (s *StockService) sortStocks(stocks []*model.Stock, sortBy, order string) []*model.Stock {
+	if len(stocks) == 0 {
+		return stocks
+	}
+
+	s.calculateChangePercentForStocks(stocks)
+
+	sort.Slice(stocks, func(i, j int) bool {
+		var result bool
+
+		switch sortBy {
+		case "ticker":
+			result = stocks[i].Ticker < stocks[j].Ticker
+		case "change_percent":
+			result = stocks[i].GetChangePercentage() < stocks[j].GetChangePercentage()
+		case "time":
+			result = stocks[i].Time.Before(stocks[j].Time)
+		default:
+			result = stocks[i].Time.Before(stocks[j].Time)
+		}
+
+		if order == "desc" {
+			result = !result
+		}
+
+		return result
+	})
+
+	return stocks
+}
+
+func (s *StockService) calculateChangePercentForStocks(stocks []*model.Stock) {
+	for _, stock := range stocks {
+		s.calculateChangePercentForStock(stock)
+	}
+}
+
+func (s *StockService) calculateChangePercentForStock(stock *model.Stock) {
+	change := stock.GetChangePercentage()
+	stock.ChangePercent = s.formatChangePercent(change)
+}
+
+func (s *StockService) formatChangePercent(change float64) string {
+	if change == 0 {
+		return "0.0%"
+	}
+
+	sign := ""
+	if change > 0 {
+		sign = "+"
+	}
+
+	return fmt.Sprintf("%s%.1f%%", sign, change)
 }
