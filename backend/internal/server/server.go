@@ -45,6 +45,20 @@ func (s *Server) setupMiddleware() {
 	s.router.Use(middleware.LoggingMiddleware())
 	s.router.Use(gin.Recovery())
 	s.router.Use(middleware.RateLimitMiddleware(s.config.RateLimit, 10))
+
+	// Add CORS middleware
+	s.router.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
 }
 
 func (s *Server) setupRoutes() {
