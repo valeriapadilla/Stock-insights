@@ -46,7 +46,7 @@
             <path fill-rule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L4.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
           </svg>
           <span class="text-sm font-medium" :class="getChangeColor()">
-            {{ getChangePercentage() }}
+            {{ stock.change_percent || getFallbackChangePercentage() }}
           </span>
         </div>
       </div>
@@ -62,7 +62,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { Stock } from '../../types/api'
 
 interface Props {
@@ -71,7 +70,6 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Computed
 const getRatingColor = (rating: string) => {
   switch (rating.toLowerCase()) {
     case 'buy':
@@ -88,13 +86,17 @@ const getRatingColor = (rating: string) => {
 }
 
 const getChangeColor = () => {
-  // Simple logic: if target_to > target_from, it's positive
+  if (props.stock.change_percent) {
+    const change = parseFloat(props.stock.change_percent.replace(/[+%]/g, ''))
+    return change >= 0 ? 'text-green-400' : 'text-red-400'
+  }
+  
   const fromPrice = parseFloat(props.stock.target_from.replace('$', ''))
   const toPrice = parseFloat(props.stock.target_to.replace('$', ''))
   return toPrice > fromPrice ? 'text-green-400' : 'text-red-400'
 }
 
-const getChangePercentage = () => {
+const getFallbackChangePercentage = () => {
   const fromPrice = parseFloat(props.stock.target_from.replace('$', ''))
   const toPrice = parseFloat(props.stock.target_to.replace('$', ''))
   const change = ((toPrice - fromPrice) / fromPrice) * 100

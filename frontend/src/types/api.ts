@@ -23,6 +23,7 @@ export interface Stock {
   time: string 
   created_at: string 
   updated_at: string
+  change_percent?: string
 }
 
 // /api/v1/public/stocks
@@ -42,10 +43,9 @@ export interface StocksSearchResponse {
   pagination: PaginationResponse
   filters_applied: {
     ticket?: string
-    date_from?: string
-    date_to?: string
-    min_price?: number
-    max_price?: number
+    rating?: string
+    sort_by?: string
+    order?: string
   }
 }
 
@@ -72,11 +72,9 @@ export interface FilterOption {
 
 export interface FilterState {
   rating: string
-  action: string
-  priceRange: string
   search: string
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
+  sort_by: string
+  order: 'asc' | 'desc'
 }
 
 export interface DashboardStats {
