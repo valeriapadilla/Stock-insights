@@ -75,9 +75,9 @@ func (s *Server) setupRoutes() {
 		stockService := service.NewStockService(stockRepo, s.logger)
 		stockHandler := v1.NewStocksHandler(stockService, s.logger)
 
+		publicV1.GET("/stocks/search", stockHandler.SearchStocks)
 		publicV1.GET("/stocks", stockHandler.ListStocks)
 		publicV1.GET("/stocks/:ticket", stockHandler.GetStock)
-		publicV1.GET("/stocks/search", stockHandler.SearchStocks)
 
 		recommendationRepo := repository.NewRecommendationRepository(database.DB)
 		recommendationCmd := repository.NewRecommendationCommand(database.DB, stockRepo)
