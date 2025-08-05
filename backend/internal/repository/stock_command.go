@@ -95,7 +95,7 @@ func (c *StockCommandImpl) Upsert(stock *model.Stock) error {
 
 	query := `
 		INSERT INTO stocks (ticker, company, target_from, target_to, rating_from, rating_to, action, brokerage, time, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		ON CONFLICT (ticker, time) DO UPDATE SET
 			company = EXCLUDED.company,
 			target_from = EXCLUDED.target_from,
@@ -174,6 +174,9 @@ func (c *StockCommandImpl) BulkUpsert(stocks []*model.Stock) error {
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
+
+	// Log the results
+	fmt.Printf("BulkUpsert completed: processed=%d, errors=%d, total=%d\n", processed, errors, len(stocks))
 
 	return nil
 }
