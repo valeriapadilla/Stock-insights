@@ -15,9 +15,11 @@ interface StocksState {
   }
   filters: {
     rating: string
+    action: string
+    priceRange: string
     search: string
-    sort_by: string
-    order: 'asc' | 'desc'
+    sortBy: string
+    sortOrder: 'asc' | 'desc'
   }
 }
 
@@ -35,14 +37,44 @@ export const useStocksStore = defineStore('stocks', {
     },
     filters: {
       rating: '',
+      action: '',
+      priceRange: '',
       search: '',
-      sort_by: 'time',
-      order: 'desc'
+      sortBy: 'time',
+      sortOrder: 'desc'
     }
   }),
 
   getters: {
-    // Remove filteredStocks getter - always use backend filtering
+    filteredStocks: (state) => {
+      let filtered = [...state.stocks]
+      
+      // Filter by search
+      if (state.filters.search) {
+        const searchLower = state.filters.search.toLowerCase()
+        filtered = filtered.filter(stock => 
+          stock.ticker.toLowerCase().includes(searchLower) ||
+          stock.company.toLowerCase().includes(searchLower)
+        )
+      }
+      
+      // Filter by rating
+      if (state.filters.rating) {
+        filtered = filtered.filter(stock => 
+          stock.rating_to.toLowerCase() === state.filters.rating.toLowerCase()
+        )
+      }
+      
+      // Filter by action
+      if (state.filters.action) {
+        filtered = filtered.filter(stock => 
+          stock.action.toLowerCase().includes(state.filters.action.toLowerCase())
+        )
+      }
+      
+      return filtered
+    },
+    
     hasMorePages: (state) => state.pagination.has_next,
     
     totalStocks: (state) => state.pagination.total,
@@ -53,7 +85,7 @@ export const useStocksStore = defineStore('stocks', {
   },
 
   actions: {
-    async loadStocks(params: { limit?: number; offset?: number; sort_by?: string; order?: 'asc' | 'desc' } = {}) {
+    async loadStocks(params: { limit?: number; offset?: number; sort?: string; order?: 'asc' | 'desc' } = {}) {
       this.loading = true
       this.error = null
       
@@ -61,8 +93,8 @@ export const useStocksStore = defineStore('stocks', {
         const response: StocksResponse = await StocksService.getStocks({
           limit: params.limit || this.pagination.limit,
           offset: params.offset || this.pagination.offset,
-          sort_by: params.sort_by || this.filters.sort_by,
-          order: params.order || this.filters.order
+          sort: params.sort || this.filters.sortBy,
+          order: params.order || this.filters.sortOrder
         })
         
         // If offset is 0, replace stocks, otherwise append
@@ -83,11 +115,10 @@ export const useStocksStore = defineStore('stocks', {
 
     async searchStocks(searchParams: {
       ticket?: string
-      rating?: string
-      sort_by?: string
-      order?: 'asc' | 'desc'
-      limit?: number
-      offset?: number
+      date_from?: string
+      date_to?: string
+      min_price?: number
+      max_price?: number
     } = {}) {
       this.loading = true
       this.error = null
@@ -95,17 +126,11 @@ export const useStocksStore = defineStore('stocks', {
       try {
         const response: StocksSearchResponse = await StocksService.searchStocks({
           ...searchParams,
-          limit: searchParams.limit || this.pagination.limit,
-          offset: searchParams.offset || this.pagination.offset
+          limit: this.pagination.limit,
+          offset: this.pagination.offset
         })
         
-        // If offset is 0, replace stocks, otherwise append
-        if (searchParams.offset === 0 || !searchParams.offset) {
-          this.stocks = response.stocks
-        } else {
-          this.stocks = [...this.stocks, ...response.stocks]
-        }
-        
+        this.stocks = response.stocks
         this.pagination = response.pagination
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Error searching stocks'
@@ -150,9 +175,11 @@ export const useStocksStore = defineStore('stocks', {
       }
       this.filters = {
         rating: '',
+        action: '',
+        priceRange: '',
         search: '',
-        sort_by: 'time',
-        order: 'desc'
+        sortBy: 'time',
+        sortOrder: 'desc'
       }
     }
   }

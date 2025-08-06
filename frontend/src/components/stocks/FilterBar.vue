@@ -1,5 +1,5 @@
 <template>
-  <div class="filter-bar">
+  <div class="filter-bar bg-gray-800 border border-gray-700 rounded-lg p-4">
     <div class="flex flex-col lg:flex-row gap-4">
       <div class="flex-1">
         <SearchBar
@@ -12,6 +12,7 @@
       <div class="flex gap-3">
         <!-- Rating Filter -->
         <div class="w-32">
+          <label class="block text-sm font-medium text-gray-300 mb-1">Rating</label>
           <FilterDropdown
             v-model="selectedRating"
             :options="ratingOptions"
@@ -19,11 +20,22 @@
           />
         </div>
 
-        <div class="w-48">
+        <!-- Action Filter -->
+        <div class="w-32">
+          <label class="block text-sm font-medium text-gray-300 mb-1">Action</label>
           <FilterDropdown
-            v-model="selectedSort"
-            :options="sortOptions"
-            placeholder="Ticker A → Z"
+            v-model="selectedAction"
+            :options="actionOptions"
+            placeholder="All Actions"
+          />
+        </div>
+
+        <div class="w-32">
+          <label class="block text-sm font-medium text-gray-300 mb-1">Price</label>
+          <FilterDropdown
+            v-model="selectedPriceRange"
+            :options="priceRangeOptions"
+            placeholder="All Prices"
           />
         </div>
       </div>
@@ -56,11 +68,22 @@
         </button>
 
         <button
-          v-if="selectedSort"
-          @click="clearSort"
+          v-if="selectedAction"
+          @click="clearAction"
           class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-purple-600 text-white hover:bg-purple-700"
         >
-          Sort: {{ getSortLabel(selectedSort) }}
+          Action: {{ getActionLabel(selectedAction) }}
+          <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+
+        <button
+          v-if="selectedPriceRange"
+          @click="clearPriceRange"
+          class="inline-flex items-center px-2 py-1 rounded-md text-xs bg-orange-600 text-white hover:bg-orange-700"
+        >
+          Price: {{ getPriceRangeLabel(selectedPriceRange) }}
           <svg class="w-3 h-3 ml-1" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
           </svg>
@@ -78,17 +101,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import SearchBar from '../common/SearchBar.vue'
 import FilterDropdown from './FilterDropdown.vue'
-import { FILTER_OPTIONS, SORT_OPTIONS } from '../../utils/constants'
+import { FILTER_OPTIONS } from '../../utils/constants'
 
 interface Props {
   modelValue: {
     search: string
     rating: string
-    sort_by: string
-    order: 'asc' | 'desc'
+    action: string
+    priceRange: string
   }
 }
 
@@ -101,21 +124,15 @@ const emit = defineEmits<{
 
 const searchQuery = ref(props.modelValue.search)
 const selectedRating = ref(props.modelValue.rating)
-const selectedSort = ref(props.modelValue.sort_by || 'ticker_asc')
+const selectedAction = ref(props.modelValue.action)
+const selectedPriceRange = ref(props.modelValue.priceRange)
 
 const ratingOptions = FILTER_OPTIONS.RATINGS
-const sortOptions = SORT_OPTIONS
+const actionOptions = FILTER_OPTIONS.ACTIONS
+const priceRangeOptions = FILTER_OPTIONS.PRICE_RANGES
 
 const hasActiveFilters = computed(() => {
-  return searchQuery.value || selectedRating.value || selectedSort.value !== 'ticker_asc'
-})
-
-watch(selectedRating, () => {
-  updateFilters()
-})
-
-watch(selectedSort, () => {
-  updateFilters()
+  return searchQuery.value || selectedRating.value || selectedAction.value || selectedPriceRange.value
 })
 
 const handleSearch = (query: string) => {
@@ -127,8 +144,8 @@ const updateFilters = () => {
   emit('update:modelValue', {
     search: searchQuery.value,
     rating: selectedRating.value,
-    sort_by: selectedSort.value,
-    order: selectedSort.value.includes('_desc') ? 'desc' : 'asc'
+    action: selectedAction.value,
+    priceRange: selectedPriceRange.value
   })
 }
 
@@ -142,15 +159,21 @@ const clearRating = () => {
   updateFilters()
 }
 
-const clearSort = () => {
-  selectedSort.value = 'ticker_asc'
+const clearAction = () => {
+  selectedAction.value = ''
+  updateFilters()
+}
+
+const clearPriceRange = () => {
+  selectedPriceRange.value = ''
   updateFilters()
 }
 
 const clearAllFilters = () => {
   searchQuery.value = ''
   selectedRating.value = ''
-  selectedSort.value = 'ticker_asc'
+  selectedAction.value = ''
+  selectedPriceRange.value = ''
   updateFilters()
 }
 
@@ -158,7 +181,11 @@ const getRatingLabel = (value: string) => {
   return ratingOptions.find(opt => opt.value === value)?.label || value
 }
 
-const getSortLabel = (value: string) => {
-  return sortOptions.find(opt => opt.value === value)?.label || value
+const getActionLabel = (value: string) => {
+  return actionOptions.find(opt => opt.value === value)?.label || value
+}
+
+const getPriceRangeLabel = (value: string) => {
+  return priceRangeOptions.find(opt => opt.value === value)?.label || value
 }
 </script> 

@@ -3,6 +3,7 @@ package v1
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -50,6 +51,28 @@ func parsePriceParams(c *gin.Context) (*float64, *float64) {
 	}
 
 	return minPrice, maxPrice
+}
+
+func parseFilterParams(c *gin.Context) (rating, sortBy, order string) {
+	rating = strings.ToLower(c.Query("rating"))
+	sortBy = c.DefaultQuery("sort_by", "time")
+	order = c.DefaultQuery("order", "desc")
+
+	validSortBy := map[string]bool{
+		"ticker":         true,
+		"change_percent": true,
+		"time":           true,
+	}
+
+	if !validSortBy[sortBy] {
+		sortBy = "time"
+	}
+
+	if order != "asc" && order != "desc" {
+		order = "desc"
+	}
+
+	return rating, sortBy, order
 }
 
 func handleError(c *gin.Context, err error, operation string, logger *logrus.Logger) {
