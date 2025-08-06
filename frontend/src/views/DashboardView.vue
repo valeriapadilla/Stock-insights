@@ -153,22 +153,6 @@ const handleStockSearch = (query: string) => {
   loadStocks()
 }
 
-const openStockDetails = async (stock: Stock) => {
-  selectedStock.value = stock
-  isModalOpen.value = true
-  stockDetailsLoading.value = true
-  stockDetailsError.value = null
-  
-  try {
-    await stocksStore.loadStock(stock.ticker)
-    selectedStock.value = stocksStore.currentStock
-  } catch (error) {
-    stockDetailsError.value = error instanceof Error ? error.message : 'Error loading stock details'
-  } finally {
-    stockDetailsLoading.value = false
-  }
-}
-
 const openRecommendationDetails = async (recommendation: Recommendation) => {
   selectedStock.value = null
   isModalOpen.value = true
