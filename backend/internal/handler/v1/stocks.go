@@ -67,13 +67,11 @@ func (h *StocksHandler) SearchStocks(c *gin.Context) {
 	rating, sortBy, order := parseFilterParams(c)
 
 	ticket := c.Query("ticket")
-	rating := c.Query("rating")
 	dateFrom := c.Query("date_from")
 	dateTo := c.Query("date_to")
 
 	stocks, total, err := h.stockService.SearchStocks(interfaces.StockSearchParams{
 		Ticket:   ticket,
-		Rating:   rating,
 		DateFrom: dateFrom,
 		DateTo:   dateTo,
 		MinPrice: minPrice,
@@ -100,7 +98,6 @@ func (h *StocksHandler) SearchStocks(c *gin.Context) {
 		},
 		"filters_applied": gin.H{
 			"ticket":    ticket,
-			"rating":    rating,
 			"date_from": dateFrom,
 			"date_to":   dateTo,
 			"min_price": minPrice,
