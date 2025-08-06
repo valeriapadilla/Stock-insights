@@ -99,22 +99,13 @@ func (s *StockService) SearchStocks(params interfaces.StockSearchParams) ([]*mod
 		Offset: params.Offset,
 		Sort:   "time",
 		Order:  "desc",
-	}
-
-	// If rating is provided, use Filters approach
-	if params.Rating != "" {
-		repoParams.Filters = map[string]string{
-			"rating": params.Rating,
-		}
-	} else {
-		// Use Search approach for other filters
-		repoParams.Search = &repoInterfaces.StockSearchFilters{
+		Search: &repoInterfaces.StockSearchFilters{
 			Ticket:   params.Ticket,
 			DateFrom: dateFrom,
 			DateTo:   dateTo,
 			MinPrice: params.MinPrice,
 			MaxPrice: params.MaxPrice,
-		}
+		},
 	}
 
 	stocks, err := s.stockRepo.GetStocks(repoParams)
