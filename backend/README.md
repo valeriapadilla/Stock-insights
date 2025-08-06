@@ -109,6 +109,50 @@ GET /health
 GET /api/v1/public/health
 ```
 
+#### GET /api/v1/public/stocks/search
+Search stocks with advanced filtering and sorting.
+
+**Query Parameters:**
+- `ticket` (string): Search by ticker symbol
+- `rating` (string): Filter by rating (buy, hold, sell)
+- `sort_by` (string): Sort field (ticker, change_percent, time)
+- `order` (string): Sort order (asc, desc)
+- `limit` (int): Items per page (default: 50)
+- `offset` (int): Items to skip (default: 0)
+
+**Examples:**
+```bash
+# Search by ticker
+curl "https://stock-insights-production-3f39.up.railway.app/api/v1/public/stocks/search?ticket=AAPL"
+
+# Filter by rating
+curl "https://stock-insights-production-3f39.up.railway.app/api/v1/public/stocks/search?rating=buy"
+
+# Sort by change percentage
+curl "https://stock-insights-production-3f39.up.railway.app/api/v1/public/stocks/search?sort_by=change_percent&order=desc"
+
+# Combined filters
+curl "https://stock-insights-production-3f39.up.railway.app/api/v1/public/stocks/search?rating=buy&sort_by=change_percent&order=desc&limit=10"
+```
+
+**Response:**
+```json
+{
+  "stocks": [...],
+  "pagination": {
+    "total": 2703,
+    "limit": 50,
+    "offset": 0,
+    "has_more": true
+  },
+  "filters_applied": {
+    "rating": "buy",
+    "sort_by": "change_percent",
+    "order": "desc"
+  }
+}
+```
+
 ### Admin Endpoints (Require Authentication)
 
 #### **Data Ingestion**

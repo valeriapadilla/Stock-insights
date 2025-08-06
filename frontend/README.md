@@ -1,145 +1,230 @@
 # StockInsights Frontend
 
-A modern Vue 3 application for displaying stock insights and recommendations with a beautiful dark theme UI.
+Modern Vue.js frontend for the StockInsights platform featuring a responsive dark theme and real-time stock data visualization.
 
-## Quick Start
+## 🎨 Features
 
-### Prerequisites
-- Node.js 18+
-- Backend API running 
+- **Dark Theme UI**: Modern, professional interface
+- **Real-time Data**: Live stock updates with timestamps
+- **Advanced Filtering**: Filter by rating and sort options
+- **Responsive Design**: Works on desktop and mobile
+- **Stock Details Modal**: Detailed view for each stock
+- **Recommendations**: AI-powered stock recommendations
+- **Infinite Scroll**: Load more stocks seamlessly
 
-### Installation
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-The application will be available at `http://localhost:5173`
-
-## Tech Stack
+## 🛠️ Tech Stack
 
 - **Vue 3** - Progressive JavaScript framework
-- **TypeScript** - Type safety and better developer experience
+- **TypeScript** - Type-safe JavaScript
 - **Pinia** - State management
 - **Vue Router** - Client-side routing
 - **Tailwind CSS** - Utility-first CSS framework
-- **Axios** - HTTP client for API calls
+- **Axios** - HTTP client
 - **Vite** - Fast build tool
 
-## Project Structure
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Backend API running
+
+### Installation
+
+1. **Navigate to frontend directory**
+   ```bash
+   cd frontend
+   ```
+
+2. **Copy environment file**
+   ```bash
+   cp env.example .env
+   ```
+
+3. **Configure environment variables**
+   ```bash
+   # Edit .env with your API configuration
+   VITE_API_BASE_URL=http://localhost:8080/api/v1
+   ```
+
+4. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+5. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+The application will be available at `http://localhost:5173`
+
+## 📁 Project Structure
 
 ```
-src/
-├── components/
-│   ├── common/          # Shared components (Header, SearchBar, etc.)
-│   ├── dashboard/       # Dashboard components (SummaryCards)
-│   ├── stocks/          # Stock-related components
-│   └── recommendations/ # Recommendation components
-├── stores/              # Pinia stores (stocks, recommendations)
-├── services/            # API services
-├── types/               # TypeScript interfaces
-├── views/               # Page components
-├── router/              # Vue Router configuration
-└── utils/               # Utility functions and constants
+frontend/
+├── src/
+│   ├── components/         # Vue components
+│   │   ├── common/        # Shared components
+│   │   ├── dashboard/     # Dashboard components
+│   │   ├── stocks/        # Stock-related components
+│   │   └── recommendations/ # Recommendation components
+│   ├── stores/            # Pinia state management
+│   │   ├── stocks.ts      # Stock store
+│   │   └── recommendations.ts # Recommendations store
+│   ├── services/          # API services
+│   │   ├── api.ts         # Axios configuration
+│   │   └── stocks.ts      # Stock API calls
+│   ├── types/             # TypeScript type definitions
+│   │   └── api.ts         # API response types
+│   ├── utils/             # Utility functions
+│   │   ├── sort.ts        # Sorting utilities
+│   │   └── stock.ts       # Stock utilities
+│   ├── views/             # Page components
+│   │   └── DashboardView.vue # Main dashboard
+│   ├── router/            # Vue Router configuration
+│   │   └── index.ts       # Route definitions
+│   ├── App.vue            # Root component
+│   └── main.ts            # Application entry point
+├── public/                # Static assets
+└── package.json           # Dependencies and scripts
 ```
 
-## Features
+## 🎯 Components Overview
 
-### Dashboard
-- **Summary Cards** - Key metrics (Total Stocks, Upgrades, Downgrades, Recommendations)
-- **Live Data Indicator** - Real-time data status
-- **Navigation Tabs** - Switch between Stocks and Recommendations views
+### Core Components
 
-### Stocks View
-- **Search & Filter** - Search by ticker/company, filter by rating/action
-- **Stock Cards** - Display stock information with price changes
-- **Pagination** - Load more stocks as needed
+- **Header**: Navigation and status indicator
+- **SummaryCards**: Dashboard metrics display
+- **FilterBar**: Stock filtering and search
+- **StockCard**: Individual stock display
+- **RecommendationCard**: Recommendation display
+- **Modal**: Reusable modal component
+- **StockDetails**: Detailed stock information
 
-### Recommendations View
-- **AI Recommendations** - Top stock recommendations with scores
-- **Ranking System** - Ranked by AI algorithm score
-- **Detailed Explanations** - AI-generated reasoning for each recommendation
+### State Management
+
+- **Stocks Store**: Manages stock data and filters
+- **Recommendations Store**: Manages recommendation data
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-Create a `.env` file in the frontend directory:
-
-```env
-VITE_API_URL=http://localhost:8080/api/v1/public
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Backend API URL | `http://localhost:8080/api/v1` |
+| `VITE_APP_ENV` | Environment | `development` |
 
 ### API Integration
 
-The frontend connects to the StockInsights backend API:
+The frontend communicates with the backend through:
 
-- **Stocks API** - `/api/v1/public/stocks`
-- **Recommendations API** - `/api/v1/public/recommendations`
-- **Search API** - `/api/v1/public/stocks/search`
+- **Stocks API**: `/api/v1/public/stocks`
+- **Search API**: `/api/v1/public/stocks/search`
+- **Recommendations API**: `/api/v1/public/recommendations`
 
-## Key Components
+## 🎨 UI/UX Features
 
-### Header Component
-- StockInsights logo with green arrow icon
-- Live data indicator with pulsing animation
+### Dark Theme
+- Professional dark color scheme
+- High contrast for readability
+- Consistent color palette
 
-### SummaryCards Component
-- Displays key metrics in card format
-- Loading states and error handling
-- Responsive grid layout
+### Responsive Design
+- Mobile-first approach
+- Flexible grid layouts
+- Touch-friendly interactions
 
-### FilterBar Component
-- Search functionality with debouncing
-- Dropdown filters for rating, action, and price range
-- Active filter indicators with clear options
+### Loading States
+- Skeleton loading for cards
+- Spinner animations
+- Error handling with retry options
 
-### StockCard Component
-- Displays stock information in card format
-- Color-coded rating badges
-- Price change indicators with arrows
-- Hover effects and transitions
+### Animations
+- Smooth transitions
+- Modal animations
+- Hover effects
 
-### RecommendationCard Component
-- AI score display with gradient background
-- Ranking system (#1, #2, etc.)
-- Detailed explanations
-- View details functionality
+## 🧪 Testing
 
-## 🚀 Development
-
+### Run tests
 ```bash
-# Development server
+npm run test
+```
+
+### Run with coverage
+```bash
+npm run test:coverage
+```
+
+### Run e2e tests
+```bash
+npm run test:e2e
+```
+
+## 🚀 Build & Deployment
+
+### Development
+```bash
 npm run dev
+```
 
-# Build for production
+### Production build
+```bash
 npm run build
+```
 
-# Preview production build
+### Preview production build
+```bash
 npm run preview
 ```
 
-## Design System
+### Docker deployment
+```bash
+# Build image
+docker build -t stock-insights-frontend .
 
-The application uses a dark theme with:
+# Run container
+docker run -p 80:80 stock-insights-frontend
+```
 
-- **Primary Colors**: Green (#10B981) for positive actions and highlights
-- **Background**: Dark gray (#111827) for main background
-- **Cards**: Medium gray (#1F2937) for card backgrounds
-- **Text**: White for primary text, gray for secondary text
-- **Accents**: Red for negative changes, yellow for neutral states
+## 🔍 Development Tools
 
-## Responsive Design
+### Vue DevTools
+Install Vue DevTools browser extension for debugging.
 
-The application is fully responsive and works on:
-- Desktop (1200px+)
-- Tablet (768px - 1199px)
-- Mobile (320px - 767px)
+### TypeScript
+Full TypeScript support with strict type checking.
 
-## Backend Integration
+### ESLint & Prettier
+Code formatting and linting configured.
 
-This frontend is designed to work with the StockInsights backend API. Make sure the backend is running and accessible at the configured API URL.
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **API connection failed**
+   - Check `VITE_API_BASE_URL` in `.env`
+   - Ensure backend is running
+   - Check CORS configuration
+
+2. **Build errors**
+   - Clear node_modules: `rm -rf node_modules && npm install`
+   - Check TypeScript errors
+   - Verify all dependencies
+
+3. **Hot reload not working**
+   - Check file watchers
+   - Restart dev server
+   - Clear browser cache
+
+### Debug Mode
+
+Enable debug logging:
+```bash
+# Add to .env
+VITE_DEBUG=true
+```
+

@@ -9,7 +9,21 @@
 
       <div class="flex-shrink-0 ml-4">
         <div class="w-12 h-12 rounded-lg flex items-center justify-center" :class="iconBgColor">
-          <component :is="icon" class="w-6 h-6" :class="iconColor" />
+          <!-- Stocks Icon -->
+          <svg v-if="iconType === 'stocks'" class="w-6 h-6" :class="iconColor" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 3h18v18H3V3zm16 16V5H5v14h14z"/>
+            <path d="M7 7h4v4H7V7zm6 0h4v4h-4V7zM7 13h4v4H7v-4zm6 0h4v4h-4v-4z"/>
+          </svg>
+          
+          <!-- Recommendations Icon -->
+          <svg v-else-if="iconType === 'recommendations'" class="w-6 h-6" :class="iconColor" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          
+          <!-- Default Icon -->
+          <svg v-else class="w-6 h-6" :class="iconColor" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
         </div>
       </div>
     </div>
@@ -42,7 +56,7 @@ interface Props {
   value: number
   description: string
   type?: 'default' | 'success' | 'warning' | 'error'
-  icon?: string
+  iconType?: 'stocks' | 'recommendations' | 'default'
   showChange?: boolean
   changeValue?: number
   changeType?: 'up' | 'down'
@@ -51,6 +65,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   type: 'default',
+  iconType: 'default',
   showChange: false,
   changeType: 'up',
   changeText: ''

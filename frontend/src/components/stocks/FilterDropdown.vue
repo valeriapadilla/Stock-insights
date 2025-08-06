@@ -75,7 +75,6 @@ const selectedLabel = computed(() => {
   return selected?.label || props.placeholder
 })
 
-// Methods
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
 }
@@ -92,7 +91,6 @@ const closeDropdown = (event: Event) => {
   }
 }
 
-// Lifecycle
 onMounted(() => {
   document.addEventListener('click', closeDropdown)
 })

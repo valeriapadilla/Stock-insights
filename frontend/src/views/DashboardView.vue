@@ -85,12 +85,26 @@
                 v-for="recommendation in recommendationsStore.recommendations" 
                 :key="recommendation.id"
                 :recommendation="recommendation"
+                @viewDetails="openRecommendationDetails"
               />
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <Modal :isOpen="isModalOpen" @close="closeModal">
+      <template #header>
+        Stock Details
+      </template>
+      <template #content>
+        <StockDetails
+          :stock="selectedStock"
+          :loading="stockDetailsLoading"
+          :error="stockDetailsError"
+        />
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -104,6 +118,10 @@ import NavigationTabs from '../components/common/NavigationTabs.vue'
 import FilterBar from '../components/stocks/FilterBar.vue'
 import StockCard from '../components/stocks/StockCard.vue'
 import RecommendationCard from '../components/recommendations/RecommendationCard.vue'
+import Modal from '../components/common/Modal.vue'
+import StockDetails from '../components/stocks/StockDetails.vue'
+import type { Stock } from '../types/api'
+import type { Recommendation } from '../types/api'
 
 const stocksStore = useStocksStore()
 const recommendationsStore = useRecommendationsStore()
@@ -115,6 +133,11 @@ const stockFilters = ref({
   sort_by: 'ticker_asc',
   order: 'asc' as 'asc' | 'desc'
 })
+
+const isModalOpen = ref(false)
+const selectedStock = ref<Stock | null>(null)
+const stockDetailsLoading = ref(false)
+const stockDetailsError = ref<string | null>(null)
 
 const handleTabChange = (tab: 'stocks' | 'recommendations') => {
   activeTab.value = tab
@@ -128,6 +151,44 @@ const handleTabChange = (tab: 'stocks' | 'recommendations') => {
 const handleStockSearch = (query: string) => {
   stockFilters.value.search = query
   loadStocks()
+}
+
+const openStockDetails = async (stock: Stock) => {
+  selectedStock.value = stock
+  isModalOpen.value = true
+  stockDetailsLoading.value = true
+  stockDetailsError.value = null
+  
+  try {
+    await stocksStore.loadStock(stock.ticker)
+    selectedStock.value = stocksStore.currentStock
+  } catch (error) {
+    stockDetailsError.value = error instanceof Error ? error.message : 'Error loading stock details'
+  } finally {
+    stockDetailsLoading.value = false
+  }
+}
+
+const openRecommendationDetails = async (recommendation: Recommendation) => {
+  selectedStock.value = null
+  isModalOpen.value = true
+  stockDetailsLoading.value = true
+  stockDetailsError.value = null
+  
+  try {
+    await stocksStore.loadStock(recommendation.ticker)
+    selectedStock.value = stocksStore.currentStock
+  } catch (error) {
+    stockDetailsError.value = error instanceof Error ? error.message : 'Error loading stock details'
+  } finally {
+    stockDetailsLoading.value = false
+  }
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  selectedStock.value = null
+  stockDetailsError.value = null
 }
 
 const loadStocks = async () => {
