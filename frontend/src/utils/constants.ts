@@ -1,6 +1,6 @@
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
-  PUBLIC_URL: import.meta.env.VITE_API_PUBLIC_URL || 'http://localhost:8080/api/v1/public',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://stock-insights-production-3f39.up.railway.app',
+  PUBLIC_URL: import.meta.env.VITE_API_PUBLIC_URL || 'https://stock-insights-production-3f39.up.railway.app/api/v1/public',
   ADMIN_URL: import.meta.env.VITE_API_ADMIN_URL || 'http://localhost:8080/api/v1/admin',
 } as const
 
