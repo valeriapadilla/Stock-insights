@@ -80,7 +80,6 @@ import StockCard from './StockCard.vue'
 import ErrorMessage from '../common/ErrorMessage.vue'
 import type { Stock } from '../../types/api'
 
-// Props
 interface Props {
   filters?: {
     search?: string
@@ -94,24 +93,19 @@ const props = withDefaults(defineProps<Props>(), {
   filters: () => ({})
 })
 
-// Emits
-const emit = defineEmits<{
+defineEmits<{
   stockClick: [stock: Stock]
 }>()
 
-// Store
 const stocksStore = useStocksStore()
 
-// Local state
 const loadingMore = ref(false)
 
-// Computed
-const stocks = computed(() => stocksStore.filteredStocks)
+const stocks = computed(() => stocksStore.stocks)
 const isLoading = computed(() => stocksStore.isLoading)
 const error = computed(() => stocksStore.currentError)
 const hasMorePages = computed(() => stocksStore.hasMorePages)
 
-// Methods
 const loadStocks = async () => {
   await stocksStore.loadStocks()
 }
@@ -133,7 +127,6 @@ const loadMore = async () => {
   }
 }
 
-// Watch filters and reload
 watch(() => props.filters, async (newFilters) => {
   if (newFilters.search) {
     await stocksStore.searchStocks(newFilters)
@@ -142,7 +135,6 @@ watch(() => props.filters, async (newFilters) => {
   }
 }, { deep: true })
 
-// Initial load
 onMounted(() => {
   loadStocks()
 })

@@ -1,7 +1,6 @@
 <template>
   <div class="recommendation-card bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-gray-600 transition-colors">
     <div class="flex items-start justify-between">
-      <!-- Left side: Rank and ticker info -->
       <div class="flex-1">
         <div class="flex items-center mb-3">
           <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-4">
@@ -56,14 +55,12 @@ interface Props {
   recommendation: Recommendation
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
-// Emits
-const emit = defineEmits<{
+defineEmits<{
   viewDetails: [recommendation: Recommendation]
 }>()
 
-// Methods
 const formatTime = (timeString: string) => {
   const date = new Date(timeString)
   return date.toLocaleDateString('en-US', {

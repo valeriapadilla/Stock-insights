@@ -1,8 +1,8 @@
 <template>
   <div class="summary-cards">
 
-    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div v-for="i in 4" :key="i" class="bg-gray-800 border border-gray-700 rounded-lg p-6 animate-pulse">
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div v-for="i in 2" :key="i" class="bg-gray-800 border border-gray-700 rounded-lg p-6 animate-pulse">
         <div class="h-4 bg-gray-700 rounded mb-2"></div>
         <div class="h-8 bg-gray-700 rounded mb-2"></div>
         <div class="h-3 bg-gray-700 rounded"></div>
@@ -16,33 +16,13 @@
       @retry="loadDashboardData"
     />
 
-    <!-- Data state -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <SummaryCard
         title="Total Stocks"
         :value="dashboardStats.totalStocks"
         description="Active stocks tracked"
         type="default"
-      />
-
-      <SummaryCard
-        title="Upgrades Today"
-        :value="dashboardStats.upgradesToday"
-        description="+12% from yesterday"
-        type="success"
-        :showChange="true"
-        changeType="up"
-        changeText="+12% from yesterday"
-      />
-
-      <SummaryCard
-        title="Downgrades Today"
-        :value="dashboardStats.downgradesToday"
-        description="-8% from yesterday"
-        type="error"
-        :showChange="true"
-        changeType="down"
-        changeText="-8% from yesterday"
+        iconType="stocks"
       />
 
       <SummaryCard
@@ -50,6 +30,7 @@
         :value="dashboardStats.topRecommendations"
         description="Updated daily"
         type="default"
+        iconType="recommendations"
       />
     </div>
   </div>
@@ -61,9 +42,7 @@ import { useStocksStore } from '../../stores/stocks'
 import { useRecommendationsStore } from '../../stores/recommendations'
 import SummaryCard from './SummaryCard.vue'
 import ErrorMessage from '../common/ErrorMessage.vue'
-import LoadingSpinner from '../common/LoadingSpinner.vue'
 
-// Stores
 const stocksStore = useStocksStore()
 const recommendationsStore = useRecommendationsStore()
 
@@ -72,8 +51,6 @@ const error = ref('')
 
 const dashboardStats = computed(() => ({
   totalStocks: stocksStore.totalStocks,
-  upgradesToday: 127, // TODO: Get from API
-  downgradesToday: 43, // TODO: Get from API
   topRecommendations: recommendationsStore.totalRecommendations
 }))
 
@@ -83,7 +60,7 @@ const loadDashboardData = async () => {
 
   try {
     await Promise.all([
-      stocksStore.loadStocks({ limit: 1 }), // Get total count
+      stocksStore.loadStocks({ limit: 1 }), 
       recommendationsStore.loadRecommendations({ limit: 30 }) // Get total count
     ])
   } catch (err) {

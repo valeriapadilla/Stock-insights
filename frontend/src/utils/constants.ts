@@ -21,34 +21,15 @@ export const FILTER_OPTIONS = {
     { value: 'neutral', label: 'Neutral' },
     { value: 'overweight', label: 'Overweight' },
     { value: 'underweight', label: 'Underweight' },
+    { value: 'equal weight', label: 'Equal Weight' },
     { value: 'in-line', label: 'In-Line' }
-  ],
-  
-  ACTIONS: [
-    { value: '', label: 'All Actions' },
-    { value: 'target_raised', label: 'Target Raised' },
-    { value: 'target_lowered', label: 'Target Lowered' },
-    { value: 'rating_upgraded', label: 'Rating Upgraded' },
-    { value: 'rating_downgraded', label: 'Rating Downgraded' },
-    { value: 'initiated', label: 'Initiated' },
-    { value: 'reiterated', label: 'Reiterated' }
-  ],
-  
-  PRICE_RANGES: [
-    { value: '', label: 'All Prices' },
-    { value: '0-10', label: '$0 - $10' },
-    { value: '10-25', label: '$10 - $25' },
-    { value: '25-50', label: '$25 - $50' },
-    { value: '50-100', label: '$50 - $100' },
-    { value: '100-250', label: '$100 - $250' },
-    { value: '250+', label: '$250+' }
   ]
 }
 
 export const SORT_OPTIONS = [
-  { value: 'time', label: 'Time' },
-  { value: 'ticker', label: 'Ticker' },
-  { value: 'company', label: 'Company' },
-  { value: 'target_to', label: 'Target Price' },
-  { value: 'rating_to', label: 'Rating' }
+  { value: 'rating_to', label: 'Rating' },
+  { value: 'ticker_asc', label: 'Ticker A → Z' },
+  { value: 'ticker_desc', label: 'Ticker Z → A' },
+  { value: 'change_percent_desc', label: 'Change % ↓ High to Low' },
+  { value: 'change_percent_asc', label: 'Change % ↑ Low to High' }
 ] 

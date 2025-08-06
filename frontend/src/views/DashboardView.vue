@@ -41,8 +41,8 @@
             
             <div v-else class="grid gap-4">
               <StockCard 
-                v-for="stock in stocksStore.filteredStocks" 
-                :key="stock.ticker"
+                v-for="(stock, index) in stocksStore.stocks" 
+                :key="`${stock.ticker}-${stock.time}-${index}`"
                 :stock="stock"
               />
             </div>
@@ -85,17 +85,31 @@
                 v-for="recommendation in recommendationsStore.recommendations" 
                 :key="recommendation.id"
                 :recommendation="recommendation"
+                @viewDetails="openRecommendationDetails"
               />
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <Modal :isOpen="isModalOpen" @close="closeModal">
+      <template #header>
+        Stock Details
+      </template>
+      <template #content>
+        <StockDetails
+          :stock="selectedStock"
+          :loading="stockDetailsLoading"
+          :error="stockDetailsError"
+        />
+      </template>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useStocksStore } from '../stores/stocks'
 import { useRecommendationsStore } from '../stores/recommendations'
 import Header from '../components/common/Header.vue'
@@ -104,6 +118,10 @@ import NavigationTabs from '../components/common/NavigationTabs.vue'
 import FilterBar from '../components/stocks/FilterBar.vue'
 import StockCard from '../components/stocks/StockCard.vue'
 import RecommendationCard from '../components/recommendations/RecommendationCard.vue'
+import Modal from '../components/common/Modal.vue'
+import StockDetails from '../components/stocks/StockDetails.vue'
+import type { Stock } from '../types/api'
+import type { Recommendation } from '../types/api'
 
 const stocksStore = useStocksStore()
 const recommendationsStore = useRecommendationsStore()
@@ -112,9 +130,14 @@ const activeTab = ref<'stocks' | 'recommendations'>('stocks')
 const stockFilters = ref({
   search: '',
   rating: '',
-  action: '',
-  priceRange: ''
+  sort_by: 'ticker_asc',
+  order: 'asc' as 'asc' | 'desc'
 })
+
+const isModalOpen = ref(false)
+const selectedStock = ref<Stock | null>(null)
+const stockDetailsLoading = ref(false)
+const stockDetailsError = ref<string | null>(null)
 
 const handleTabChange = (tab: 'stocks' | 'recommendations') => {
   activeTab.value = tab
@@ -130,22 +153,81 @@ const handleStockSearch = (query: string) => {
   loadStocks()
 }
 
+const openStockDetails = async (stock: Stock) => {
+  selectedStock.value = stock
+  isModalOpen.value = true
+  stockDetailsLoading.value = true
+  stockDetailsError.value = null
+  
+  try {
+    await stocksStore.loadStock(stock.ticker)
+    selectedStock.value = stocksStore.currentStock
+  } catch (error) {
+    stockDetailsError.value = error instanceof Error ? error.message : 'Error loading stock details'
+  } finally {
+    stockDetailsLoading.value = false
+  }
+}
+
+const openRecommendationDetails = async (recommendation: Recommendation) => {
+  selectedStock.value = null
+  isModalOpen.value = true
+  stockDetailsLoading.value = true
+  stockDetailsError.value = null
+  
+  try {
+    await stocksStore.loadStock(recommendation.ticker)
+    selectedStock.value = stocksStore.currentStock
+  } catch (error) {
+    stockDetailsError.value = error instanceof Error ? error.message : 'Error loading stock details'
+  } finally {
+    stockDetailsLoading.value = false
+  }
+}
+
+const closeModal = () => {
+  isModalOpen.value = false
+  selectedStock.value = null
+  stockDetailsError.value = null
+}
+
 const loadStocks = async () => {
-  await stocksStore.loadStocks({
-    limit: 20,
-    offset: 0,
-    sort: 'time',
-    order: 'desc'
+  await stocksStore.searchStocks({
+    ticket: stockFilters.value.search,
+    rating: stockFilters.value.rating,
+    sort_by: stockFilters.value.sort_by,
+    order: stockFilters.value.order,
+    limit: 10,
+    offset: 0
   })
 }
 
 const loadMoreStocks = async () => {
   const currentOffset = stocksStore.pagination.offset
-  await stocksStore.loadStocks({
-    limit: 20,
-    offset: currentOffset + stocksStore.pagination.limit,
-    sort: 'time',
-    order: 'desc'
+  const limit = 10 
+  
+  const scrollPosition = window.scrollY
+  const documentHeight = document.documentElement.scrollHeight
+  
+  await stocksStore.searchStocks({
+    ticket: stockFilters.value.search,
+    rating: stockFilters.value.rating,
+    sort_by: stockFilters.value.sort_by,
+    order: stockFilters.value.order,
+    limit: limit,
+    offset: currentOffset + limit
+  })
+  
+  nextTick(() => {
+    const newDocumentHeight = document.documentElement.scrollHeight
+    const heightIncrease = newDocumentHeight - documentHeight
+    
+    const newScrollPosition = scrollPosition + heightIncrease
+    
+    window.scrollTo({
+      top: newScrollPosition,
+      behavior: 'instant' 
+    })
   })
 }
 
@@ -154,6 +236,12 @@ const loadRecommendations = async () => {
     limit: 30
   })
 }
+
+watch(stockFilters, () => {
+  if (activeTab.value === 'stocks') {
+    loadStocks()
+  }
+}, { deep: true })
 
 onMounted(() => {
   loadStocks()
