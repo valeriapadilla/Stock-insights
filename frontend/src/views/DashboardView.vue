@@ -41,8 +41,8 @@
             
             <div v-else class="grid gap-4">
               <StockCard 
-                v-for="stock in stocksStore.filteredStocks" 
-                :key="stock.ticker"
+                v-for="(stock, index) in stocksStore.stocks" 
+                :key="`${stock.ticker}-${stock.time}-${index}`"
                 :stock="stock"
               />
             </div>
@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { useStocksStore } from '../stores/stocks'
 import { useRecommendationsStore } from '../stores/recommendations'
 import Header from '../components/common/Header.vue'
@@ -112,8 +112,8 @@ const activeTab = ref<'stocks' | 'recommendations'>('stocks')
 const stockFilters = ref({
   search: '',
   rating: '',
-  action: '',
-  priceRange: ''
+  sort_by: 'ticker_asc',
+  order: 'asc' as 'asc' | 'desc'
 })
 
 const handleTabChange = (tab: 'stocks' | 'recommendations') => {
@@ -131,21 +131,42 @@ const handleStockSearch = (query: string) => {
 }
 
 const loadStocks = async () => {
-  await stocksStore.loadStocks({
-    limit: 20,
-    offset: 0,
-    sort: 'time',
-    order: 'desc'
+  await stocksStore.searchStocks({
+    ticket: stockFilters.value.search,
+    rating: stockFilters.value.rating,
+    sort_by: stockFilters.value.sort_by,
+    order: stockFilters.value.order,
+    limit: 10,
+    offset: 0
   })
 }
 
 const loadMoreStocks = async () => {
   const currentOffset = stocksStore.pagination.offset
-  await stocksStore.loadStocks({
-    limit: 20,
-    offset: currentOffset + stocksStore.pagination.limit,
-    sort: 'time',
-    order: 'desc'
+  const limit = 10 
+  
+  const scrollPosition = window.scrollY
+  const documentHeight = document.documentElement.scrollHeight
+  
+  await stocksStore.searchStocks({
+    ticket: stockFilters.value.search,
+    rating: stockFilters.value.rating,
+    sort_by: stockFilters.value.sort_by,
+    order: stockFilters.value.order,
+    limit: limit,
+    offset: currentOffset + limit
+  })
+  
+  nextTick(() => {
+    const newDocumentHeight = document.documentElement.scrollHeight
+    const heightIncrease = newDocumentHeight - documentHeight
+    
+    const newScrollPosition = scrollPosition + heightIncrease
+    
+    window.scrollTo({
+      top: newScrollPosition,
+      behavior: 'instant' 
+    })
   })
 }
 
@@ -154,6 +175,12 @@ const loadRecommendations = async () => {
     limit: 30
   })
 }
+
+watch(stockFilters, () => {
+  if (activeTab.value === 'stocks') {
+    loadStocks()
+  }
+}, { deep: true })
 
 onMounted(() => {
   loadStocks()

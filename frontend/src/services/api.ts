@@ -13,7 +13,6 @@ const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(`Making request to: ${config.url}`)
     return config
   },
   (error) => {
@@ -24,7 +23,6 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    console.log(`Response from: ${response.config.url}`, response.status)
     return response
   },
   (error) => {
