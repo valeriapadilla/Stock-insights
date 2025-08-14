@@ -188,6 +188,7 @@ The system uses a sophisticated scoring algorithm (0-100 points):
 2. **Positive Action Filter**: Only stocks with positive analyst actions >80
 3. **Positive Rating Filter**: Only stocks with positive ratings
 4. **Significant Change Filter**: Only stocks with significant target changes
+![IMG_2275](https://github.com/user-attachments/assets/fcae7849-51eb-4ded-95e6-a134e6df597e)
 
 ## 🛠️ Development
 
