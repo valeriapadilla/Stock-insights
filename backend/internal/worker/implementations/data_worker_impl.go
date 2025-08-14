@@ -47,18 +47,7 @@ func (w *DataWorkerImpl) FetchAndProcessStocks(ctx context.Context) error {
 }
 
 func (w *DataWorkerImpl) FetchAndProcessStocksEfficient(ctx context.Context) error {
-	w.logger.Info("Starting incremental stock data fetch and processing")
-
-	lastUpdate, err := w.stockRepo.GetLastUpdateTime()
-	if err != nil {
-		w.logger.WithError(err).Warn("Failed to get last update time, will process all stocks")
-		return w.processAllStocks(ctx)
-	}
-
-	if lastUpdate == nil {
-		w.logger.Info("No previous update found, processing all stocks")
-		return w.processAllStocks(ctx)
-	}
+	w.logger.Info("Starting stock data fetch and processing (UPSERT strategy)")
 
 	allStocks, err := w.externalClient.GetAllStocks(ctx)
 	if err != nil {
@@ -68,47 +57,29 @@ func (w *DataWorkerImpl) FetchAndProcessStocksEfficient(ctx context.Context) err
 
 	w.logger.WithFields(logrus.Fields{
 		"total_stocks": len(allStocks),
-		"since":        lastUpdate.Format(time.RFC3339),
-	}).Info("Fetched stocks from external API")
+	}).Info("Fetched all stocks from external API")
 
-	newStocks := w.filterStocksByDate(allStocks, *lastUpdate)
-
-	w.logger.WithFields(logrus.Fields{
-		"total_stocks": len(allStocks),
-		"new_stocks":   len(newStocks),
-		"efficiency":   float64(len(newStocks)) / float64(len(allStocks)) * 100,
-	}).Info("Filtered stocks by date")
-
-	if len(newStocks) == 0 {
-		w.logger.Info("No new stocks found")
+	if len(allStocks) == 0 {
+		w.logger.Info("No stocks found from external API")
 		return nil
 	}
 
-	if err := w.saveStocksInBatchesOptimized(ctx, newStocks); err != nil {
+	if err := w.saveStocksInBatchesOptimized(ctx, allStocks); err != nil {
 		w.logger.WithError(err).Error("Failed to save stocks to database")
 		return errors.NewDatabaseError("failed to save stocks to database", err)
 	}
 
 	w.logger.WithFields(logrus.Fields{
-		"stocks_processed": len(newStocks),
-		"stocks_saved":     len(newStocks),
-	}).Info("Successfully processed and saved stocks")
+		"stocks_processed": len(allStocks),
+		"stocks_saved":     len(allStocks),
+	}).Info("Successfully processed and saved all stocks using UPSERT")
 
 	return nil
 }
 
 func (w *DataWorkerImpl) processAllStocks(ctx context.Context) error {
-	allStocks, err := w.externalClient.GetAllStocks(ctx)
-	if err != nil {
-		w.logger.WithError(err).Error("Failed to fetch stocks from external API")
-		return errors.NewExternalError("failed to fetch stocks from external API", err)
-	}
-
-	w.logger.WithFields(logrus.Fields{
-		"total_stocks": len(allStocks),
-	}).Info("Processing all stocks")
-
-	return w.saveStocksInBatchesOptimized(ctx, allStocks)
+	w.logger.Info("Redirecting to efficient processing method")
+	return w.FetchAndProcessStocksEfficient(ctx)
 }
 
 func (w *DataWorkerImpl) filterStocksByDate(allStocks []model.Stock, since time.Time) []model.Stock {
@@ -124,7 +95,7 @@ func (w *DataWorkerImpl) filterStocksByDate(allStocks []model.Stock, since time.
 		"total_stocks":    len(allStocks),
 		"filtered_stocks": len(filteredStocks),
 		"since":           since.Format(time.RFC3339),
-	}).Info("Applied local date filtering")
+	}).Info("Applied local date filtering (DEPRECATED)")
 
 	return filteredStocks
 }
